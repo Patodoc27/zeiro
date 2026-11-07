@@ -23,10 +23,10 @@
     setTimeout(function () { t.remove(); }, 2600);
   };
 
-  Z.modal = function (html, grande) {
+  Z.modal = function (html, tam) {
     var veil = document.createElement('div');
     veil.className = 'veil';
-    veil.innerHTML = '<div class="modal' + (grande ? ' grande' : '') + '">' + html + '</div>';
+    veil.innerHTML = '<div class="modal' + (tam === 'xl' ? ' xl' : tam ? ' grande' : '') + '">' + html + '</div>';
     veil.addEventListener('click', function (e) { if (e.target === veil) veil.remove(); });
     document.body.appendChild(veil);
     return veil;
@@ -123,6 +123,7 @@
           '<button class="rolbtn" data-rol="u-admin">' + ZI('gear') + '<span>Dirección<small>Patricia Inés Castro — administra todo</small></span></button>' +
           '<button class="rolbtn" data-rol="u-bio">' + ZI('book') + '<span>Docente<small>Lucía Fernández — Biología 5°1°</small></span></button>' +
           '<button class="rolbtn" data-rol="u-e1">' + ZI('cap') + '<span>Estudiante<small>Martina Aguirre — ve materiales y rinde</small></span></button>' +
+          '<button class="rolbtn" data-rol="u-fam">' + ZI('users') + '<span>Familia<small>Ve las notas y la asistencia de Martina</small></span></button>' +
           '</div>' +
           '<p style="color:var(--neg-150);font-size:11.5px;margin-top:14px">Con Supabase configurado en app/config.js, acá aparece el login con email y contraseña.</p>'
         : '<label>Email</label><input type="email" id="l_email" autocomplete="username">' +
@@ -148,6 +149,7 @@
   var NAV = {
     estudiante: [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Mis cursos'], ['#/pendientes', 'clock', 'Pendientes'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados'], ['#/mensajes', 'send', 'Mensajes'], ['#/mis-notas', 'star', 'Mis notas'], ['#/mis-logros', 'award', 'Mis logros']],
     docente:    [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Mis cursos'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados'], ['#/mensajes', 'send', 'Mensajes']],
+    familia:    [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Cursos'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados'], ['#/mis-notas', 'star', 'Notas']],
     admin:      [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Cursos'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados'], ['#/mensajes', 'send', 'Mensajes'], ['#/panel', 'cap', 'Estadísticas'], ['#/admin/usuarios', 'users', 'Usuarios'], ['#/admin/cursos', 'gear', 'Gestión']]
   };
 

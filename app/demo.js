@@ -14,7 +14,8 @@ window.Z_DEMO_SEED = {
     { id: 'u-e5', full_name: 'Escudero, Catalina', role: 'estudiante', email: 'cescudero@zeiro.demo' },
     { id: 'u-e6', full_name: 'Flores, Mateo',      role: 'estudiante', email: 'mflores@zeiro.demo' },
     { id: 'u-e7', full_name: 'Gómez, Antonia',     role: 'estudiante', email: 'agomez@zeiro.demo' },
-    { id: 'u-e8', full_name: 'Herrera, Bautista',  role: 'estudiante', email: 'bherrera@zeiro.demo' }
+    { id: 'u-e8', full_name: 'Herrera, Bautista',  role: 'estudiante', email: 'bherrera@zeiro.demo' },
+    { id: 'u-fam', full_name: 'Familia de Martina', role: 'familia', email: 'familia@zeiro.demo', hijo_id: 'u-e1' }
   ],
   courses: [
     { id: 'c-bio', name: 'Biología · 5° 1°', short_name: 'BIO 5-1', color: '#14B8A6',
@@ -59,7 +60,10 @@ window.Z_DEMO_SEED = {
     { id: 'm-b3', course_id: 'c-bio', section_id: 's-b1', type: 'assignment', position: 3, visible: true,
       due_date: '2026-11-10T23:59:00Z',
       title: 'TP 1 · Célula animal vs. vegetal',
-      content: { etiqueta: 'Entrega', etiqueta_color: '#2563EB', instructions: 'Elaborar un cuadro comparativo con al menos **6 diferencias** entre célula animal y vegetal (presencia de pared, cloroplastos, vacuolas, forma, centriolos, nutrición). Se puede adjuntar una imagen o escribir el cuadro en texto.', max_grade: 10, allow_late: true }, created_at: '2026-03-03T12:00:00Z' },
+      content: { rubrica: [
+          { label: 'Comparación correcta de estructuras (animal vs vegetal)', pts: 4 },
+          { label: 'Uso de vocabulario científico', pts: 3 },
+          { label: 'Presentación, formato y bibliografía', pts: 3 } ], etiqueta: 'Entrega', etiqueta_color: '#2563EB', instructions: 'Elaborar un cuadro comparativo con al menos **6 diferencias** entre célula animal y vegetal (presencia de pared, cloroplastos, vacuolas, forma, centriolos, nutrición). Se puede adjuntar una imagen o escribir el cuadro en texto.', max_grade: 10, allow_late: true }, created_at: '2026-03-03T12:00:00Z' },
     { id: 'm-b4', course_id: 'c-bio', section_id: 's-b2', type: 'quiz', position: 1, visible: true,
       due_date: '2026-11-14T23:59:00Z',
       title: 'Cuestionario · Biomoléculas',

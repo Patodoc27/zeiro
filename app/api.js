@@ -101,6 +101,9 @@
     me: function () { return me; },
 
     /* ---------- sesión ---------- */
+    /* estudiante efectivo: el hijo cuando entra la familia */
+    sid: function () { return me && me.hijo_id ? me.hijo_id : (me ? me.id : null); },
+
     loginDemo: function (roleOrId) {
       var d = load();
       var p = find(d, 'profiles', roleOrId);
@@ -153,7 +156,7 @@
         var list = d.courses.filter(function (c) {
           if (me.role === 'admin') return true;
           if (me.role === 'docente') return c.teacher_id === me.id;
-          return d.enrollments.some(function (e) { return e.course_id === c.id && e.student_id === me.id; });
+          return d.enrollments.some(function (e) { return e.course_id === c.id && e.student_id === api.sid(); });
         });
         return Promise.resolve(clone(list));
       }
@@ -572,7 +575,7 @@
         var myCourseIds = d.courses.filter(function (c) {
           if (me.role === 'admin') return true;
           if (me.role === 'docente') return c.teacher_id === me.id;
-          return d.enrollments.some(function (e) { return e.course_id === c.id && e.student_id === me.id; });
+          return d.enrollments.some(function (e) { return e.course_id === c.id && e.student_id === api.sid(); });
         }).map(function (c) { return c.id; });
         return Promise.resolve(d.announcements.filter(function (a) {
           if (a.course_id === null) {
@@ -653,6 +656,7 @@
     markViewed: function (moduleId) {
       if (useDemo) {
         var d = load();
+        if (me.hijo_id) return Promise.resolve();
         var ok = d.module_views.some(function (v) { return v.module_id === moduleId && v.student_id === me.id; });
         if (!ok) { d.module_views.push({ module_id: moduleId, student_id: me.id, viewed_at: now() }); save(d); }
         return Promise.resolve();
@@ -662,7 +666,7 @@
     myViews: function () {
       if (useDemo) {
         var d = load();
-        return Promise.resolve(d.module_views.filter(function (v) { return v.student_id === me.id; }).map(function (v) { return v.module_id; }));
+        return Promise.resolve(d.module_views.filter(function (v) { return v.student_id === api.sid(); }).map(function (v) { return v.module_id; }));
       }
       return supa().from('module_views').select('module_id').eq('student_id', me.id)
         .then(function (r) { return (r.data || []).map(function (v) { return v.module_id; }); });
@@ -771,7 +775,7 @@
     myAttendancePct: function (courseId) {
       if (useDemo) {
         var d = load();
-        var rows = d.attendance.filter(function (a) { return a.course_id === courseId && a.student_id === me.id; });
+        var rows = d.attendance.filter(function (a) { return a.course_id === courseId && a.student_id === api.sid(); });
         if (!rows.length) return Promise.resolve(null);
         var ok = rows.filter(function (a) { return a.status === 'P' || a.status === 'T'; }).length;
         return Promise.resolve(Math.round(ok / rows.length * 100));
@@ -789,9 +793,9 @@
     badges: function () {
       if (useDemo) {
         var d = load();
-        var att = d.quiz_attempts.filter(function (a) { return a.student_id === me.id; });
-        var subs = d.submissions.filter(function (s) { return s.student_id === me.id; });
-        var views = d.module_views.filter(function (v) { return v.student_id === me.id; });
+        var att = d.quiz_attempts.filter(function (a) { return a.student_id === api.sid(); });
+        var subs = d.submissions.filter(function (s) { return s.student_id === api.sid(); });
+        var views = d.module_views.filter(function (v) { return v.student_id === api.sid(); });
         var posts = d.forum_posts.filter(function (p) { return p.author_id === me.id; });
         var best = att.reduce(function (b, a) { return Math.max(b, (a.score || 0) / Math.max(1, a.max_score)); }, 0);
         var perfect = att.some(function (a) { return a.max_score && a.score === a.max_score; });
@@ -822,7 +826,7 @@
         var myCourseIds = d.courses.filter(function (c) {
           if (me.role === 'admin') return true;
           if (me.role === 'docente') return c.teacher_id === me.id;
-          return d.enrollments.some(function (e) { return e.course_id === c.id && e.student_id === me.id; });
+          return d.enrollments.some(function (e) { return e.course_id === c.id && e.student_id === api.sid(); });
         }).map(function (c) { return c.id; });
         d.announcements.forEach(function (a) {
           if (a.created_at > seen && a.author_id !== me.id &&
@@ -1058,7 +1062,7 @@
       code = (code || '').trim().toUpperCase();
       var c = d.courses.filter(function (x) { return (x.enroll_code || '').toUpperCase() === code; })[0];
       if (!c) return Promise.resolve({ error: 'Código no encontrado' });
-      if (d.enrollments.some(function (e) { return e.course_id === c.id && e.student_id === me.id; }))
+      if (d.enrollments.some(function (e) { return e.course_id === c.id && e.student_id === api.sid(); }))
         return Promise.resolve({ error: 'Ya estás inscripto en ese curso', course: c });
       d.enrollments.push({ id: uid(d, 'en'), course_id: c.id, student_id: me.id });
       save(d); return Promise.resolve({ course: c });
@@ -1119,7 +1123,7 @@
       if (!useDemo) return Promise.resolve([]);
       var d = load();
       var out = [];
-      d.enrollments.filter(function (e) { return e.student_id === me.id; }).forEach(function (e) {
+      d.enrollments.filter(function (e) { return e.student_id === api.sid(); }).forEach(function (e) {
         var c = find(d, 'courses', e.course_id);
         d.modules.filter(function (m) {
           return m.course_id === e.course_id && m.visible && m.due_date &&
@@ -1127,7 +1131,7 @@
         }).forEach(function (m) {
           var hecha = m.type === 'assignment'
             ? d.submissions.some(function (s) { return s.module_id === m.id && s.student_id === me.id; })
-            : d.quiz_attempts.some(function (a) { return a.module_id === m.id && a.student_id === me.id && a.status !== 'open'; });
+            : d.quiz_attempts.some(function (a) { return a.module_id === m.id && a.student_id === api.sid() && a.status !== 'open'; });
           out.push({ mod: clone(m), course: c, hecha: hecha, vencida: new Date(m.due_date) < new Date() });
         });
       });

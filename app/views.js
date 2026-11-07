@@ -414,7 +414,8 @@
       '<div style="flex:1"><label>Se cierra (opcional)</label><input type="datetime-local" id="mm_until" value="' + (m && m.available_until ? m.available_until.slice(0, 16) : '') + '"></div></div>' +
       '<div class="fila" style="justify-content:flex-end;margin-top:16px;gap:8px">' +
       (m && tipo === 'quiz' ? '<button class="btn tur" data-preg>' + ZI('edit') + ' Editar preguntas</button>' : '') +
-      '<button class="btn sec" data-x>Cancelar</button><button class="btn" data-ok>Guardar</button></div>');
+      '<button class="btn sec" data-x>Cancelar</button><button class="btn" data-ok>Guardar</button></div>',
+      (tipo === 'page' || tipo === 'libro' || tipo === 'assignment' || tipo === 'html' || tipo === 'poll') ? 'xl' : true);
     v.querySelector('[data-x]').onclick = function () { v.remove(); };
     var bp = v.querySelector('[data-preg]');
     if (bp) bp.onclick = function () { v.remove(); location.hash = '#/editor-quiz/' + m.id; };
@@ -455,7 +456,10 @@
         content.file_name = f ? f.name : (c.file_name || 'archivo');
         content.file_url = c.file_url || null;
       } else if (tipo === 'assignment') {
-        content = { instructions: v.querySelector('#mm_ins').value, max_grade: Number(v.querySelector('#mm_max').value) || 10, allow_late: v.querySelector('#mm_late').checked };
+        content = { instructions: v.querySelector('#mm_ins').value, max_grade: Number(v.querySelector('#mm_max').value) || 10, allow_late: v.querySelector('#mm_late').checked,
+          rubrica: v.querySelector('#mm_rub').value.split('\n').map(function (x) {
+            var p = x.split('|'); return p.length === 2 ? { label: p[0].trim(), pts: Number(p[1]) || 0 } : null;
+          }).filter(Boolean) };
         var dd = v.querySelector('#mm_due').value;
         due = dd ? new Date(dd).toISOString() : null;
       } else if (tipo === 'quiz') {
@@ -519,10 +523,13 @@
         });
       }
       function pintar() {
+        var me = api().me();
         var m = found, c = fcourse;
         var h = volver('#/curso/' + c.id, esc(c.short_name || c.name)) + topbar(m.title, esc(c.name));
         if (m.type === 'forum') { location.hash = '#/foro/' + m.id; return; }
-        if (m.type === 'page') h += '<div class="card" style="max-width:1180px"><div class="vozrow">' + Z.voz.readBtn('#mod_txt') + '<span>Escuchar</span></div><div id="mod_txt">' + Z.md(m.content.body || '') + '</div></div>';
+        var repasoBtn = (me.role === 'estudiante' && (m.type === 'page' || m.type === 'libro'))
+          ? '<button class="btn tur sm" id="mod_repaso" style="margin-bottom:12px">' + ZI('sparkle') + ' Repaso automático</button>' : '';
+        if (m.type === 'page') h += repasoBtn + '<div class="card" style="max-width:1180px"><div class="vozrow">' + Z.voz.readBtn('#mod_txt') + '<span>Escuchar</span></div><div id="mod_txt">' + Z.md(m.content.body || '') + '</div></div>';
         else if (m.type === 'link') h += '<div class="card"><p>' + ZI('link') + ' <a href="' + esc(m.content.url) + '" target="_blank" rel="noopener">' + esc(m.content.url) + '</a></p>' +
           '<a class="btn" href="' + esc(m.content.url) + '" target="_blank" rel="noopener" style="margin-top:8px">Abrir enlace</a></div>';
         else if (m.type === 'file') h += '<div class="card"><div class="fila">' + ZI('file') + '<b>' + esc(m.content.file_name || 'Archivo') + '</b>' +
@@ -536,7 +543,7 @@
         }
         else if (m.type === 'libro') {
           var caps = (m.content.capitulos && m.content.capitulos.length) ? m.content.capitulos : [{ t: 'Capítulo 1', b: '' }];
-          h += '<div class="libro"><nav class="libro-nav"><h4>Índice</h4>' +
+          h += repasoBtn + '<div class="libro"><nav class="libro-nav"><h4>Índice</h4>' +
             caps.map(function (cap, ix) {
               return '<button class="lcap' + (ix === 0 ? ' on' : '') + '" data-cap="' + ix + '"><span class="n">' + (ix + 1) + '</span>' + esc(cap.t) + '</button>';
             }).join('') + '</nav>' +
@@ -547,6 +554,39 @@
             '<button class="btn sm" id="libro_next">Siguiente ' + ZI('chev') + '</button></div></div></div>';
         }
         var main = Z.shell(h, '#/mis-cursos');
+        var rb2 = main.querySelector('#mod_repaso');
+        if (rb2) rb2.onclick = function () {
+          var fuente = m.type === 'libro'
+            ? (m.content.capitulos || []).map(function (x) { return '## ' + x.t + '\n' + x.b; }).join('\n')
+            : (m.content.body || '');
+          var puntos = [];
+          fuente.split('\n').forEach(function (l) {
+            l = l.trim();
+            if (/^#{2,3}\s/.test(l)) puntos.push('**' + l.replace(/^#+\s*/, '') + '**');
+            else if (l.startsWith('> ')) puntos.push(l.slice(2));
+            else if (/^- /.test(l)) puntos.push(l.slice(2));
+          });
+          var bolds = (fuente.match(/\*\*[^*]{4,80}\*\*/g) || []);
+          puntos = puntos.slice(0, 14);
+          var v = Z.modal('<h2>Repaso automático · ' + esc(m.title) + '</h2>' +
+            '<p style="color:var(--neg-500);font-size:13.5px;margin-top:0">Puntos clave extraídos del material:</p>' +
+            '<div class="card" style="box-shadow:none;border:1.5px solid var(--neg-150)">' +
+            (puntos.length ? '<ul class="md-ul">' + puntos.map(function (p) { return '<li>' + Z.md(p) + '</li>'; }).join('') + '</ul>' : '<p>Sin puntos marcados.</p>') +
+            '</div>' +
+            '<div class="fila" style="justify-content:flex-end;margin-top:14px"><button class="btn sec" data-x>Cerrar</button>' +
+            '<button class="btn tur" id="rp_fc">' + ZI('book') + ' Guardar como flashcards</button></div>');
+          v.querySelector('[data-x]').onclick = function () { v.remove(); };
+          v.querySelector('#rp_fc').onclick = function () {
+            var creadas = 0;
+            var secu = bolds.slice(0, 6).map(function (t) { return t.replace(/\*/g, ''); });
+            var todo = function (i) {
+              if (i >= secu.length) { v.remove(); Z.toast(creadas + ' flashcards agregadas al mazo del curso', 'ok'); return; }
+              api().flashSave(m.course_id, { front: '¿Qué es/para qué sirve: ' + secu[i] + '?', back: secu[i] + ' — repasá su definición en "' + m.title + '".' })
+                .then(function () { creadas++; todo(i + 1); });
+            };
+            todo(0);
+          };
+        };
         if (m.type === 'poll') {
           var opsP = (m.content.opciones || []);
           var pintarPoll = function () {
@@ -1105,12 +1145,39 @@
                 }).join('')) +
                 (s.link ? '<div><a href="' + esc(s.link) + '" target="_blank" rel="noopener" style="font-size:12px">' + ZI('link') + ' ' + esc(s.link.slice(0, 40)) + '</a></div>' : '') +
                 (s.embed ? '<details class="embver"><summary>' + ZI('code') + ' Ver incrustado</summary>' + bloqueEmbed(s.embed) + '</details>' : '') + '</td>' +
-                '<td class="num"><input class="nota" type="number" min="0" max="' + ((cm.content || {}).max_grade || 10) + '" step="0.5" data-nota="' + s.id + '" value="' + (s.grade == null ? '' : s.grade) + '"></td>' +
+                '<td class="num"><input class="nota" type="number" min="0" max="' + ((cm.content || {}).max_grade || 10) + '" step="0.5" data-nota="' + s.id + '" value="' + (s.grade == null ? '' : s.grade) + '">' +
+                ((cm.content && cm.content.rubrica && cm.content.rubrica.length)
+                  ? '<button class="btn sec sm" style="margin-top:4px" data-rub="' + s.id + '">Rúbrica</button>' : '') + '</td>' +
                 '<td><input type="text" data-fb="' + s.id + '" value="' + esc(s.feedback || '') + '" placeholder="Devolución…" style="min-width:150px"></td>' +
                 '<td><button class="btn sec sm" data-g="' + s.id + '">Guardar</button></td></tr>';
             }).join('') : '<tr><td colspan="6" style="color:var(--neg-300)">Sin entregas todavía.</td></tr>') +
             '</tbody></table></div>';
           var main = Z.shell(h, '#/mis-cursos');
+          main.querySelectorAll('[data-rub]').forEach(function (b) {
+            b.onclick = function () {
+              var sid2 = b.getAttribute('data-rub');
+              var rub = cm.content.rubrica;
+              var v = Z.modal('<h2>Rúbrica de corrección</h2>' + rub.map(function (r) {
+                return '<label class="rubopt"><input type="checkbox" data-rpts="' + r.pts + '" style="width:auto;margin-right:8px">' +
+                  '<span style="flex:1">' + esc(r.label) + '</span><b>' + r.pts + ' pts</b></label>';
+              }).join('') + '<div class="entre" style="margin-top:12px"><b>Total: <span id="rub_tot">0</span> pts</b>' +
+                '<button class="btn" id="rub_ap">Aplicar a la nota</button></div>');
+              var tot = v.querySelector('#rub_tot');
+              v.querySelectorAll('[data-rpts]').forEach(function (cb) {
+                cb.onchange = function () {
+                  var t = 0;
+                  v.querySelectorAll('[data-rpts]:checked').forEach(function (x) { t += Number(x.getAttribute('data-rpts')); });
+                  tot.textContent = t;
+                };
+              });
+              v.querySelector('#rub_ap').onclick = function () {
+                var t = Number(tot.textContent);
+                var mx = (cm.content.max_grade || 10);
+                main.querySelector('[data-nota="' + sid2 + '"]').value = Math.min(mx, Math.round(t * 10) / 10);
+                v.remove(); Z.toast('Nota ' + Math.min(mx, t) + ' desde rúbrica', 'ok');
+              };
+            };
+          });
           main.querySelectorAll('[data-g]').forEach(function (b) {
             b.onclick = function () {
               var id2 = b.getAttribute('data-g');
@@ -1321,10 +1388,11 @@
         datas.forEach(function (d) {
           var cols = d.gb.gradables.map(function (m) { return { label: m.title, max: (m.content && m.content.max_grade) || 10, module_id: m.id }; });
           d.gb.manualLabels.forEach(function (l) { cols.push({ label: l, max: 10, module_id: null, manual: true }); });
+          var yid = me.hijo_id || me.id;
           var filas = cols.map(function (col) {
             var g = null;
             d.gb.rows.forEach(function (r) {
-              if (r.student_id !== me.id) return;
+              if (r.student_id !== yid) return;
               if (col.module_id && r.module_id === col.module_id) g = r;
               if (col.manual && !r.module_id && r.label === col.label) g = r;
             });
