@@ -21,6 +21,8 @@ window.Z_DEMO_SEED = {
     { id: 'c-bio', name: 'Biología · 5° 1°', short_name: 'BIO 5-1', color: '#14B8A6',
       pattern: 'puntos', sigla: 'BIO', layout: 'solapas', banner_url: 'assets/img/celula.svg', welcome: '¡Hola! Acá van a encontrar los materiales, tareas y el foro de dudas de Biología.',
       description: 'Seres vivos, organización celular, biomoléculas y metabolismo.', school_year: '2026',
+      presentacion: '## Biología · 5° 1° — Bienvenidos\n\nEste año vamos a recorrer **la organización de la vida**: desde la célula como unidad estructural hasta el metabolismo que la sostiene. La idea es entender el cuerpo como una ciudad organizada, no memorizar definiciones.\n\n### Cómo trabajamos\n\n- **Teoría + laboratorio**: cada unidad tiene material de lectura, una actividad práctica y un cuestionario corto.\n- **Foro de dudas**: respondan entre ustedes también — explicar es la mejor forma de aprender.\n- **Entregas**: se suben acá, en el formato que necesiten (texto, PDF, video o enlace).\n\n### Evaluación\n\nTrabajos prácticos 40% · Cuestionarios 30% · Laboratorio 20% · Participación 10%\n\n> *"Nada en biología tiene sentido si no es a la luz de la evolución."* — Th. Dobzhansky',
+      programa: { kind: 'link', url: 'https://www.argentina.gob.ar/educacion/curriculos', name: 'Programa anual 2026 (PDF)' },
       enroll_code: 'BIO-2026', teacher_id: 'u-bio', active: true, created_at: '2026-02-20T10:00:00Z' },
     { id: 'c-mat', name: 'Matemática · 3° 2°', short_name: 'MAT 3-2', color: '#2563EB',
       pattern: 'ondas', sigla: 'MAT', banner_url: 'assets/img/funcion.svg', welcome: 'Repasen la guía antes del cuestionario. ¡Éxitos!',

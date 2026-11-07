@@ -656,13 +656,13 @@
         var d = load();
         var row = c.id ? find(d, 'courses', c.id) : null;
         if (!row) { row = { id: uid(d, 'c'), active: true, created_at: now() }; d.courses.push(row); }
-        ['name', 'short_name', 'color', 'description', 'school_year', 'teacher_id', 'active', 'pattern', 'welcome', 'sigla', 'banner_url', 'layout', 'enroll_code'].forEach(function (k) {
+        ['name', 'short_name', 'color', 'description', 'school_year', 'teacher_id', 'active', 'pattern', 'welcome', 'sigla', 'banner_url', 'layout', 'enroll_code', 'presentacion', 'programa'].forEach(function (k) {
           if (c[k] !== undefined) row[k] = c[k];
         });
         save(d); return Promise.resolve(clone(row));
       }
       var r2 = {};
-      ['id', 'name', 'short_name', 'color', 'description', 'school_year', 'teacher_id', 'active', 'pattern', 'welcome', 'sigla', 'banner_url', 'layout', 'enroll_code'].forEach(function (k) {
+      ['id', 'name', 'short_name', 'color', 'description', 'school_year', 'teacher_id', 'active', 'pattern', 'welcome', 'sigla', 'banner_url', 'layout', 'enroll_code', 'presentacion', 'programa'].forEach(function (k) {
         if (c[k] !== undefined) r2[k] = c[k];
       });
       return supa().from('courses').upsert(r2).select().single().then(function (r) { return r.data; });

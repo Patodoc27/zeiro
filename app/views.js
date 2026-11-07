@@ -164,8 +164,7 @@
         '<div class="ah-txt"><span class="sigla">' + esc(c.sigla || (c.short_name || c.name).slice(0, 4).toUpperCase()) + '</span>' +
         '<h1>' + esc(c.name) + '</h1><p>' + esc(c.description || '') + '</p>' +
         (c.teacher ? '<div class="ah-doc"><span class="foto">' + esc((c.teacher.full_name || '?').charAt(0).toUpperCase()) + '</span>' +
-          '<div><b>' + esc(c.teacher.full_name) + '</b><small>Docente del aula</small></div></div>' : '') +
-        (c.welcome ? '<div class="ah-wel">' + esc(c.welcome) + '</div>' : '') + '</div>' +
+          '<div><b>' + esc(c.teacher.full_name) + '</b><small>Docente del aula</small></div></div>' : '') + '</div>' +
         '<div class="ah-acts">' +
           (edita
             ? '<button class="btn blanco sm" id="c_aula">' + ZI('sparkle') + ' Diseñar aula</button>' +
@@ -206,15 +205,26 @@
             (edita ? '<div class="fila" style="margin-top:10px"><button class="btn sec sm" data-addbar="' + s.id + '">' + ZI('plus') + ' Agregar actividad o recurso</button></div>' : '') +
             '</div></div>';
         };
+        var htmlPres = function () {
+          var prog = c.programa ? '<a class="btn sm" href="' + esc(c.programa.url) + '" target="_blank" rel="noopener" download>' + ZI('file') + ' Programa: ' + esc(c.programa.name || 'descargar') + '</a>' : '';
+          return '<div class="seccion prescard"><header><h3>' + ZI('book') + ' Asignatura</h3>' +
+            (edita ? '<button class="btn sec sm" id="c_editpres">' + ZI('edit') + ' Editar presentación</button>' : '') + '</header>' +
+            '<div class="cuerpo">' +
+            (c.presentacion ? '<div class="md">' + Z.md(c.presentacion) + '</div>' : '<p style="color:var(--neg-300)">El docente todavía no cargó la presentación de la asignatura.</p>') +
+            (c.welcome ? '<div class="pres-wel">' + esc(c.welcome) + '</div>' : '') +
+            (prog ? '<div class="fila" style="margin-top:14px">' + prog + '</div>' : '') +
+            '</div></div>';
+        };
         if (c.layout === 'solapas' && secs.length) {
-          if (!solapaActiva || !secs.some(function (x) { return x.id === solapaActiva; })) solapaActiva = secs[0].id;
-          wrap.innerHTML = '<div class="solapas">' + secs.map(function (s) {
-            return '<button class="solapa' + (s.id === solapaActiva ? ' on' : '') + '" data-solapa="' + s.id + '"' +
-              (s.color ? ' style="--sol:' + esc(s.color) + '"' : '') + '>' + esc(s.title) + '</button>';
-          }).join('') + '</div>' +
-            secs.filter(function (s) { return s.id === solapaActiva; }).map(htmlSeccion).join('');
+          if (!solapaActiva || (solapaActiva !== 'PRES' && !secs.some(function (x) { return x.id === solapaActiva; }))) solapaActiva = 'PRES';
+          wrap.innerHTML = '<div class="solapas"><button class="solapa' + (solapaActiva === 'PRES' ? ' on' : '') + '" data-solapa="PRES">' + ZI('book') + ' Asignatura</button>' +
+            secs.map(function (s) {
+              return '<button class="solapa' + (s.id === solapaActiva ? ' on' : '') + '" data-solapa="' + s.id + '"' +
+                (s.color ? ' style="--sol:' + esc(s.color) + '"' : '') + '>' + esc(s.title) + '</button>';
+            }).join('') + '</div>' +
+            (solapaActiva === 'PRES' ? htmlPres() : secs.filter(function (s) { return s.id === solapaActiva; }).map(htmlSeccion).join(''));
         } else {
-          wrap.innerHTML = secs.map(htmlSeccion).join('') || '<div class="card vacio">' + ZI('book') + '<p>Curso vacío.' + (edita ? ' Agregá la primera sección.' : '') + '</p></div>';
+          wrap.innerHTML = htmlPres() + (secs.map(htmlSeccion).join('') || (edita ? '' : ''));
         }
 
         wire();
@@ -293,6 +303,8 @@
         if (addSec) addSec.onclick = function () { modalSeccion(null); };
         var ba = main.querySelector('#c_aula');
         if (ba) ba.onclick = function () { modalAula(c); };
+        var bp = main.querySelector('#c_editpres');
+        if (bp) bp.onclick = function () { modalPres(c, pintar); };
         var be = main.querySelector('#c_emails');
         if (be) be.onclick = function () {
           api().emailLog(id).then(function (log) {
@@ -1585,11 +1597,44 @@
   }
 
   /* ---------- diseñar mi aula (docente) ---------- */
+  /* ---------- modal presentación de la asignatura ---------- */
+  function modalPres(c, done) {
+    var prog = c.programa || null;
+    var v = Z.modal('<h2>Presentación de la asignatura</h2>' +
+      '<p style="color:var(--neg-300);font-size:13px;margin-top:-6px">Es lo primero que ve el estudiante al entrar al aula: de qué trata la materia, cómo se trabaja, qué se espera.</p>' +
+      '<label>Presentación</label>' + Z.voz.wrap('<textarea id="mp_txt" style="min-height:260px" placeholder="Ej.: En esta materia vamos a estudiar...">' + esc(c.presentacion || '') + '</textarea>') +
+      '<label style="margin-top:12px">Programa (opcional)</label>' +
+      '<div class="fila"><input type="file" id="mp_pf" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.png" style="flex:1"></div>' +
+      '<div class="fila" style="margin-top:6px"><input id="mp_pl" placeholder="…o pegá un enlace al programa" value="' + esc(prog && prog.kind === 'link' ? prog.url : '') + '" style="flex:1">' +
+      (prog ? '<label style="white-space:nowrap"><input type="checkbox" id="mp_nop" style="width:auto"> quitar</label>' : '') + '</div>' +
+      (prog ? '<p style="font-size:12px;color:var(--neg-300)">Actual: ' + esc(prog.name || 'archivo') + '</p>' : '') +
+      '<div class="fila" style="justify-content:flex-end;margin-top:14px"><button class="btn sec" data-x>Cancelar</button><button class="btn" data-ok>Guardar</button></div>', 'xl');
+    v.querySelector('[data-x]').onclick = function () { v.remove(); };
+    v.querySelector('[data-ok]').onclick = function () {
+      var nop = v.querySelector('#mp_nop');
+      var f = v.querySelector('#mp_pf').files[0];
+      var link = v.querySelector('#mp_pl').value.trim();
+      var grabar = function (programa) {
+        api().saveCourse({ id: c.id, presentacion: v.querySelector('#mp_txt').value.trim(), programa: programa })
+          .then(function () { v.remove(); Z.toast('Presentación guardada', 'ok'); done && done(); });
+      };
+      if (nop && nop.checked) return grabar(null);
+      if (f) {
+        if (f.size > 4000000) return Z.toast('El programa pesa demasiado (máx. 4 MB en demo)', 'mal');
+        var r = new FileReader();
+        r.onload = function () { grabar({ kind: 'file', url: r.result, name: f.name }); };
+        return r.readAsDataURL(f);
+      }
+      if (link) return grabar({ kind: 'link', url: link, name: 'Programa de la asignatura' });
+      grabar(prog);
+    };
+  }
+
   function modalAula(c) {
     var pats = [['liso', 'Liso'], ['rayas', 'Rayas'], ['puntos', 'Puntos'], ['ondas', 'Ondas']];
     var v = Z.modal('<h2>Diseñar mi aula</h2>' +
       '<div class="aula-prev" id="ap_prev"><div class="pat" id="ap_pat"></div>' +
-      '<div class="ah-txt"><span class="sigla" id="ap_sig"></span><h1>' + esc(c.name) + '</h1><p id="ap_welt"></p></div></div>' +
+      '<div class="ah-txt"><span class="sigla" id="ap_sig"></span><h1>' + esc(c.name) + '</h1><p>' + esc(c.description || '') + '</p></div></div>' +
       '<div class="fila" style="margin-top:14px"><div style="width:130px"><label>Color del aula</label>' +
       '<input type="color" id="ap_color" value="' + esc(c.color || '#7C3AED') + '" style="padding:3px;height:40px"></div>' +
       '<div style="flex:1"><label>Sigla en la banda</label><input id="ap_sigla" maxlength="4" value="' + esc(c.sigla || c.short_name || '') + '" placeholder="BIO"></div></div>' +
@@ -1606,7 +1651,6 @@
       }).join('') + '</div><p style="font-size:11.5px;color:var(--neg-300);margin:3px 0 0">Solapas: cada unidad es una pestaña.</p></div></div>' +
       '<label>Patrón de la portada</label><div class="fila wrap" id="ap_pats">' +
       pats.map(function (p) { return '<button type="button" class="patopt' + ((c.pattern || 'liso') === p[0] ? ' on' : '') + '" data-pat="' + p[0] + '">' + p[1] + '</button>'; }).join('') + '</div>' +
-      '<label>Mensaje de bienvenida para el aula</label>' + Z.voz.wrap('<textarea id="ap_welcome" style="min-height:70px" placeholder="Ej.: ¡Bienvenides! Acá van a encontrar todo lo de la materia.">' + esc(c.welcome || '') + '</textarea>') +
       '<div class="fila" style="justify-content:flex-end;margin-top:14px"><button class="btn sec" data-x>Cancelar</button><button class="btn" data-ok>Guardar diseño</button></div>', true);
     var sel = c.pattern || 'liso';
     var lay = c.layout || 'lista';
@@ -1619,12 +1663,10 @@
         : col;
       v.querySelector('#ap_pat').className = 'pat pat-' + sel;
       v.querySelector('#ap_sig').textContent = (v.querySelector('#ap_sigla').value || 'ZEI').toUpperCase();
-      v.querySelector('#ap_welt').textContent = v.querySelector('#ap_welcome').value;
     }
     pintar();
     v.querySelector('#ap_color').oninput = pintar;
     v.querySelector('#ap_sigla').oninput = pintar;
-    v.querySelector('#ap_welcome').oninput = pintar;
     var bf = v.querySelector('#ap_banner');
     bf.onchange = function () {
       var f = bf.files[0];
@@ -1662,7 +1704,7 @@
       var nb = v.querySelector('#ap_nobanner');
       api().saveCourse({ id: c.id, color: v.querySelector('#ap_color').value,
         sigla: v.querySelector('#ap_sigla').value.trim().toUpperCase(),
-        pattern: sel, welcome: v.querySelector('#ap_welcome').value.trim(),
+        pattern: sel,
         banner_url: (nb && nb.checked) ? null : banner, layout: lay })
         .then(function () { v.remove(); Z.toast('Aula rediseñada', 'ok'); curso(c.id); });
     };
