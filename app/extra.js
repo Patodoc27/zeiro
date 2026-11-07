@@ -51,7 +51,7 @@
       var otro = us.filter(function (u) { return u.id === uid; })[0];
       var h = volver('#/mensajes', 'Mensajes') +
         topbar(otro ? otro.full_name : 'Chat', otro ? otro.role : '');
-      h += '<div class="card" style="max-width:1180px"><div id="chat_box" class="chatbox"></div>' +
+      h += '<div class="card" style="max-width:none"><div id="chat_box" class="chatbox"></div>' +
         '<div class="chatbar"><input id="chat_in" placeholder="Escribí un mensaje…" autocomplete="off">' +
         '<button class="btn" id="chat_send">' + ZI('send') + '</button></div></div>';
       var main = Z.shell(h, '#/mensajes');
@@ -85,7 +85,7 @@
       var pend = ps.filter(function (p) { return !p.hecha; });
       var hechos = ps.filter(function (p) { return p.hecha; });
       var h = topbar('Pendientes', 'Tus entregas y cuestionarios por fecha');
-      h += '<div class="card" style="max-width:1180px">' + (pend.length ? pend.map(function (p) {
+      h += '<div class="card" style="max-width:none">' + (pend.length ? pend.map(function (p) {
         var dest = p.mod.type === 'quiz' ? '#/quiz/' + p.mod.id : '#/entrega/' + p.mod.id;
         return '<a class="hilo" href="' + dest + '" style="' + (p.vencida ? 'opacity:.6' : '') + '">' +
           '<span class="nico" style="color:var(--vio-500)">' + ZI(p.mod.type === 'quiz' ? 'quiz' : 'task') + '</span>' +
@@ -93,7 +93,7 @@
           '<span class="h-der"><span class="pill ' + (p.vencida ? 'mal' : 'azu') + '">' + ZI('clock') + ' ' + Z.fmtFecha(p.mod.due_date) + '</span></span></a>';
       }).join('') : '<div class="vacio">' + Z_ZEBRA('fest') + '<p>¡Estás al día! Nada pendiente.</p></div>') + '</div>';
       if (hechos.length) {
-        h += '<div class="card" style="max-width:1180px"><h3 style="margin:0 0 8px;font-size:15px;color:var(--neg-500)">Ya entregaste</h3>' +
+        h += '<div class="card" style="max-width:none"><h3 style="margin:0 0 8px;font-size:15px;color:var(--neg-500)">Ya entregaste</h3>' +
           hechos.map(function (p) {
             return '<div class="hilo" style="opacity:.7"><span class="nico" style="color:var(--tur-500)">' + ZI('check') + '</span>' +
               '<span class="h-txt"><b>' + esc(p.mod.title) + '</b><small>' + esc(p.course ? p.course.short_name || p.course.name : '') + '</small></span>' +
@@ -110,7 +110,7 @@
       var c = rs[0], rows = rs[1];
       var h = volver('#/curso/' + courseId, esc(c.short_name || c.name)) +
         topbar('Progreso del curso', esc(c.name) + ' · ' + rows.length + ' estudiantes');
-      h += '<div class="card" style="max-width:1180px;overflow-x:auto"><table class="md-tab"><tbody>' +
+      h += '<div class="card" style="max-width:none;overflow-x:auto"><table class="md-tab"><tbody>' +
         '<tr><th>Estudiante</th><th>Materiales vistos</th><th>Evaluaciones</th><th>Promedio</th><th>Certificado</th></tr>' +
         rows.map(function (r) {
           var pct = r.total ? Math.round(r.vistos / r.total * 100) : 0;
@@ -143,7 +143,7 @@
         topbar('Flashcards', esc(c.name),
           edita ? '<button class="btn sm" id="fc_new">' + ZI('plus') + ' Nueva carta</button>' : '');
       if (edita) {
-        h += '<div class="card" style="max-width:1180px">' + (cards.length ? cards.map(function (fc) {
+        h += '<div class="card" style="max-width:none">' + (cards.length ? cards.map(function (fc) {
           return '<div class="fila" style="border-bottom:1px solid var(--neg-150);padding:9px 0;align-items:flex-start">' +
             '<div style="flex:1"><b>' + esc(fc.front) + '</b><br><small style="color:var(--neg-500)">' + esc(fc.back) + '</small></div>' +
             '<button class="iconbtn" data-fdel="' + fc.id + '">' + ZI('trash') + '</button></div>';

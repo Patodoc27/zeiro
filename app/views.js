@@ -529,7 +529,7 @@
         if (m.type === 'forum') { location.hash = '#/foro/' + m.id; return; }
         var repasoBtn = (me.role === 'estudiante' && (m.type === 'page' || m.type === 'libro'))
           ? '<button class="btn tur sm" id="mod_repaso" style="margin-bottom:12px">' + ZI('sparkle') + ' Repaso automático</button>' : '';
-        if (m.type === 'page') h += repasoBtn + '<div class="card" style="max-width:1180px"><div class="vozrow">' + Z.voz.readBtn('#mod_txt') + '<span>Escuchar</span></div><div id="mod_txt">' + Z.md(m.content.body || '') + '</div></div>';
+        if (m.type === 'page') h += repasoBtn + '<div class="card" style="max-width:none"><div class="vozrow">' + Z.voz.readBtn('#mod_txt') + '<span>Escuchar</span></div><div id="mod_txt">' + Z.md(m.content.body || '') + '</div></div>';
         else if (m.type === 'link') h += '<div class="card"><p>' + ZI('link') + ' <a href="' + esc(m.content.url) + '" target="_blank" rel="noopener">' + esc(m.content.url) + '</a></p>' +
           '<a class="btn" href="' + esc(m.content.url) + '" target="_blank" rel="noopener" style="margin-top:8px">Abrir enlace</a></div>';
         else if (m.type === 'file') h += '<div class="card"><div class="fila">' + ZI('file') + '<b>' + esc(m.content.file_name || 'Archivo') + '</b>' +
@@ -539,7 +539,7 @@
           ((!m.content.video_url && !m.content.html) ? '<p style="color:var(--neg-300)">Bloque vacío.</p>' : '') + '</div>';
         else if (m.type === 'poll') {
           var ops = (m.content.opciones || []);
-          h += '<div class="card" style="max-width:1180px"><h2 class="md-h" style="margin-top:0">' + esc(m.content.pregunta || 'Encuesta') + '</h2><div id="poll_box"></div></div>';
+          h += '<div class="card" style="max-width:none"><h2 class="md-h" style="margin-top:0">' + esc(m.content.pregunta || 'Encuesta') + '</h2><div id="poll_box"></div></div>';
         }
         else if (m.type === 'libro') {
           var caps = (m.content.capitulos && m.content.capitulos.length) ? m.content.capitulos : [{ t: 'Capítulo 1', b: '' }];
@@ -653,7 +653,7 @@
           var puede = hechos.length < (cfg.attempts_allowed || 1);
           var mejor = hechos.reduce(function (b, a) { return Math.max(b, a.score || 0); }, -1);
           var h = volver('#/curso/' + cc.id, esc(cc.short_name || cc.name)) + topbar(cm.title, 'Cuestionario · ' + esc(cc.name));
-          h += '<div class="card" style="max-width:1180px">';
+          h += '<div class="card" style="max-width:none">';
           if (cfg.intro) h += '<p>' + esc(cfg.intro) + '</p>';
           h += '<div class="fila wrap" style="margin:12px 0">' +
             '<span class="pill azu">' + qs.length + ' preguntas</span>' +
@@ -797,9 +797,9 @@
     function verCorreccion(c, m, a) {
       api().questions(m.id, false).then(function (qs) {
         var h = volver('#/quiz/' + m.id, 'Cuestionario') + topbar(m.title, 'Tu corrección · ' + Z.fmtFecha(a.finished_at, true)) +
-          '<div class="card" style="max-width:1180px"><div class="entre"><h2 style="font-size:17px">Puntaje: ' + a.score + ' / ' + a.max_score + '</h2>' +
+          '<div class="card" style="max-width:none"><div class="entre"><h2 style="font-size:17px">Puntaje: ' + a.score + ' / ' + a.max_score + '</h2>' +
           (a.needs_review ? '<span class="pill azu">Preguntas abiertas en revisión</span>' : '<span class="pill tur">Corregido</span>') + '</div></div>' +
-          '<div style="max-width:1180px;margin-top:14px">' +
+          '<div style="max-width:none;margin-top:14px">' +
           qs.map(function (q) { return Z.quiz.renderReview(q, a.answers ? a.answers[q.id] : null, a.essay_scores ? a.essay_scores[q.id] : null); }).join('') + '</div>';
         Z.shell(h, '#/mis-cursos');
       });
@@ -1039,7 +1039,7 @@
           var cfg = cm.content || {};
           var vencida = cm.due_date && new Date(cm.due_date) < new Date();
           var h = volver('#/curso/' + cc.id, esc(cc.short_name || cc.name)) + topbar(cm.title, 'Tarea · ' + esc(cc.name));
-          h += '<div class="card" style="max-width:1180px"><div class="vozrow">' + Z.voz.readBtn('#en_cons') + '<span>Escuchar consigna</span></div><div id="en_cons">' + Z.md(cfg.instructions || '') + '</div>' +
+          h += '<div class="card" style="max-width:none"><div class="vozrow">' + Z.voz.readBtn('#en_cons') + '<span>Escuchar consigna</span></div><div id="en_cons">' + Z.md(cfg.instructions || '') + '</div>' +
             '<div class="fila wrap" style="margin:10px 0">' +
             (cm.due_date ? '<span class="pill ' + (vencida ? 'mal' : 'azu') + '">' + ZI('clock') + ' ' + Z.fmtFecha(cm.due_date, true) + '</span>' : '') +
             '<span class="pill vio">Nota máx. ' + (cfg.max_grade || 10) + '</span>' +
@@ -1788,7 +1788,7 @@
           '<span>' + (xp.next - xp.total) + ' XP para nivel ' + (xp.level + 1) + '</span></div></div>';
       }
       if (certs && certs.length) {
-        h += '<div class="card" style="max-width:1180px"><h3 style="margin:0 0 10px;font-size:15px">Certificados</h3>' + certs.map(function (ct) {
+        h += '<div class="card" style="max-width:none"><h3 style="margin:0 0 10px;font-size:15px">Certificados</h3>' + certs.map(function (ct) {
           return '<a class="hilo" href="#/cert/' + ct.code + '"><span class="nico" style="color:var(--vio-500)">' + ZI('award') + '</span>' +
             '<span class="h-txt"><b>' + esc(ct.course_name) + '</b><small>' + Z.fmtFecha(ct.issued_at) + '</small></span>' +
             '<span class="pill vio">' + ct.code + '</span></a>';
@@ -1801,7 +1801,7 @@
           (b.ok ? '<div class="med">' + ZI('award') + ' ¡Ganada!</div>' : '<small style="color:var(--neg-150)">Todavía no</small>') + '</div>';
       }).join('') + '</div>';
       if (tabla && tabla.length) {
-        h += '<div class="card" style="max-width:1180px"><h3 style="margin:0 0 10px;font-size:15px">Tabla de posiciones</h3>' +
+        h += '<div class="card" style="max-width:none"><h3 style="margin:0 0 10px;font-size:15px">Tabla de posiciones</h3>' +
           tabla.slice(0, 10).map(function (t, ix) {
             return '<div class="hilo"><span class="pos-n">' + (ix + 1) + '°</span>' +
               '<span class="h-txt"><b>' + esc(t.name) + '</b></span><span class="pill ' + (ix === 0 ? 'vio' : 'gris') + '">' + t.pts + ' XP</span></div>';
@@ -1828,11 +1828,11 @@
           var h = volver('#/correccion-quiz/' + mid, 'Intentos') +
             topbar('Vista previa · ' + cm.title, 'Así lo ve el estudiante · ' + esc(cc.name),
               '<button class="btn sec" id="pv_sol">' + ZI('check') + ' Ver respuestas</button>');
-          h += '<div class="card" style="max-width:1180px">' + (cfg.intro ? Z.md(cfg.intro) : '') +
+          h += '<div class="card" style="max-width:none">' + (cfg.intro ? Z.md(cfg.intro) : '') +
             '<div class="fila wrap" style="margin-top:8px"><span class="pill azu">' + qs.length + ' preguntas</span>' +
             (cfg.time_limit_min ? '<span class="pill azu">' + ZI('clock') + ' ' + cfg.time_limit_min + ' min</span>' : '') +
             '<span class="pill vio">' + (cfg.attempts_allowed || 1) + ' intento' + ((cfg.attempts_allowed || 1) > 1 ? 's' : '') + '</span></div></div>' +
-            '<div id="pv_list" style="max-width:1180px;margin-top:14px"></div>';
+            '<div id="pv_list" style="max-width:none;margin-top:14px"></div>';
           var main = Z.shell(h, '#/mis-cursos');
           var verSol = false;
           function dibujar() {
