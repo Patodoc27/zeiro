@@ -423,12 +423,12 @@ a.hilo:hover{border-color:var(--vio-300);text-decoration:none;box-shadow:var(--s
 .aula-hero .pat{position:absolute;inset:0;pointer-events:none}
 .aula-hero .ah-txt{position:relative;padding:20px 24px;flex:1;min-width:0;
   background:linear-gradient(90deg,rgba(16,8,38,.5) 0%,rgba(16,8,38,.22) 55%,transparent 90%)}
-.aula-hero .ah-txt h1{margin:8px 0 4px;font-size:26px;letter-spacing:.2px;text-shadow:0 2px 8px rgba(10,4,28,.55)}
-.aula-hero .ah-txt p{margin:0;opacity:.95;font-size:13.5px;text-shadow:0 1px 4px rgba(10,4,28,.6)}
+.aula-hero .ah-txt h1{margin:8px 0 4px;font-size:26px;letter-spacing:.2px;color:#fff;text-shadow:0 2px 8px rgba(10,4,28,.55)}
+.aula-hero .ah-txt p{margin:0;opacity:.95;font-size:13.5px;color:#fff;text-shadow:0 1px 4px rgba(10,4,28,.6)}
 .aula-hero .sigla{display:inline-block;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.65);
   color:#fff;font-weight:900;font-size:13px;letter-spacing:1.5px;padding:3px 10px;border-radius:8px}
 .aula-hero .ah-wel{margin-top:10px;background:rgba(255,255,255,.16);border-left:4px solid rgba(255,255,255,.7);
-  padding:8px 12px;border-radius:0 10px 10px 0;font-size:13.5px;max-width:640px}
+  padding:8px 12px;border-radius:0 10px 10px 0;font-size:13.5px;max-width:640px;color:#fff}
 .aula-hero .ah-acts{position:relative;display:flex;flex-direction:column;gap:8px;justify-content:center;
   padding:16px 20px;background:rgba(0,0,0,.18)}
 .btn.blanco{background:rgba(255,255,255,.92);color:var(--neg-700)}
@@ -444,8 +444,8 @@ a.hilo:hover{border-color:var(--vio-300);text-decoration:none;box-shadow:var(--s
 .aula-prev .pat{position:absolute;inset:0;pointer-events:none}
 .aula-prev .ah-txt{position:relative;padding:16px 18px;
   background:linear-gradient(90deg,rgba(16,8,38,.5) 0%,rgba(16,8,38,.22) 55%,transparent 90%)}
-.aula-prev .ah-txt h1{margin:6px 0 2px;font-size:20px;text-shadow:0 2px 8px rgba(10,4,28,.55)}
-.aula-prev .ah-txt p{margin:0;font-size:13px;opacity:.95;text-shadow:0 1px 4px rgba(10,4,28,.6)}
+.aula-prev .ah-txt h1{margin:6px 0 2px;font-size:20px;color:#fff;text-shadow:0 2px 8px rgba(10,4,28,.55)}
+.aula-prev .ah-txt p{margin:0;font-size:13px;opacity:.95;color:#fff;text-shadow:0 1px 4px rgba(10,4,28,.6)}
 .aula-prev .sigla{display:inline-block;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.65);
   color:#fff;font-weight:900;font-size:12px;letter-spacing:1.5px;padding:2px 9px;border-radius:7px}
 .patopt{border:1.5px solid var(--linea);background:#fff;border-radius:10px;padding:8px 14px;
