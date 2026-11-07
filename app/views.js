@@ -162,10 +162,10 @@
       var h = volver('#/mis-cursos') +
         '<div class="aula-hero" style="' + heroStyle + '"><div class="pat pat-' + esc(c.pattern || 'liso') + '"></div>' +
         '<div class="ah-txt"><span class="sigla">' + esc(c.sigla || (c.short_name || c.name).slice(0, 4).toUpperCase()) + '</span>' +
-        '<h1>' + esc(c.name) + '</h1><p>' + (c.teacher ? 'Prof. ' + esc(c.teacher.full_name) + ' · ' : '') + esc(c.description || '') + '</p>' +
-        (c.welcome ? '<div class="ah-wel">' + esc(c.welcome) + '</div>' : '') + '</div>' +
+        '<h1>' + esc(c.name) + '</h1><p>' + esc(c.description || '') + '</p>' +
         (c.teacher ? '<div class="ah-doc"><span class="foto">' + esc((c.teacher.full_name || '?').charAt(0).toUpperCase()) + '</span>' +
           '<div><b>' + esc(c.teacher.full_name) + '</b><small>Docente del aula</small></div></div>' : '') +
+        (c.welcome ? '<div class="ah-wel">' + esc(c.welcome) + '</div>' : '') + '</div>' +
         '<div class="ah-acts">' +
           (edita
             ? '<button class="btn blanco sm" id="c_aula">' + ZI('sparkle') + ' Diseñar aula</button>' +
