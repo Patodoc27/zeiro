@@ -47,17 +47,43 @@
 
   /* markdown lite: **negrita**, *cursiva*, saltos de línea, listas con - */
   Z.md = function (txt) {
+    /* markdown ligero: **b** *i* # h ## h ### h - lista > cita --- línea !img[]() [txt](url) */
     var t = esc(txt || '');
     t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
-         .replace(/\*([^*\n]+)\*/g, '<i>$1</i>');
-    var partes = t.split(/\n{2,}/);
-    return '<div class="md">' + partes.map(function (p) {
-      var lineas = p.split('\n');
-      if (lineas.every(function (l) { return /^\s*-\s+/.test(l); })) {
-        return '<ul>' + lineas.map(function (l) { return '<li>' + l.replace(/^\s*-\s+/, '') + '</li>'; }).join('') + '</ul>';
+         .replace(/\*([^*\n]+)\*/g, '<i>$1</i>')
+         .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img class="md-img" src="$2" alt="$1" loading="lazy">')
+         .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    var lineas = t.split('\n'), out = [], par = [];
+    function flush() { if (par.length) { out.push('<p>' + par.join('<br>') + '</p>'); par = []; } }
+    var i = 0;
+    while (i < lineas.length) {
+      var l = lineas[i];
+      if (!l.trim()) { flush(); i++; continue; }
+      if (/^#{1,3}\s/.test(l)) {
+        flush();
+        var n = l.match(/^#+/)[0].length;
+        out.push('<h' + (n + 1) + ' class="md-h">' + l.replace(/^#+\s*/, '') + '</h' + (n + 1) + '>');
+        i++; continue;
       }
-      return '<p>' + lineas.join('<br>') + '</p>';
-    }).join('') + '</div>';
+      if (/^---+$/.test(l.trim())) { flush(); out.push('<hr class="md-hr">'); i++; continue; }
+      if (/^\s*-\s+/.test(l)) {
+        flush();
+        var ul = [];
+        while (i < lineas.length && /^\s*-\s+/.test(lineas[i])) { ul.push('<li>' + lineas[i].replace(/^\s*-\s+/, '') + '</li>'); i++; }
+        out.push('<ul>' + ul.join('') + '</ul>');
+        continue;
+      }
+      if (/^\s*(&gt;|>)\s?/.test(l)) {
+        flush();
+        var bq = [];
+        while (i < lineas.length && /^\s*(&gt;|>)\s?/.test(lineas[i])) { bq.push(lineas[i].replace(/^\s*(&gt;|>)\s?/, '')); i++; }
+        out.push('<blockquote>' + bq.join('<br>') + '</blockquote>');
+        continue;
+      }
+      par.push(l); i++;
+    }
+    flush();
+    return '<div class="md">' + out.join('') + '</div>';
   };
   Z.confirm = function (msg, onOk) {
     var v = Z.modal('<h2>¿Confirmar?</h2><p>' + esc(msg) + '</p>' +

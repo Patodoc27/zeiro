@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420">
+<rect width="800" height="420" rx="24" fill="#0C2B48"/>
+<g transform="translate(300,40)">
+ <rect x="60" y="10" width="90" height="55" rx="12" fill="#1E3A8A"/>
+ <rect x="95" y="60" width="30" height="110" rx="8" fill="#3B82F6"/>
+ <rect x="70" y="150" width="80" height="28" rx="10" fill="#1E3A8A"/>
+ <path d="M110 178q-90 30-90 130" stroke="#3B82F6" stroke-width="22" fill="none" stroke-linecap="round"/>
+ <rect x="-20" y="290" width="240" height="30" rx="12" fill="#1E3A8A"/>
+ <rect x="60" y="215" width="120" height="14" rx="7" fill="#5EEAD4"/>
+ <circle cx="120" cy="245" r="14" fill="#14B8A6"/>
+ <circle cx="35" cy="40" r="16" fill="#5EEAD4"/>
+</g>
+<g font-family="sans-serif" font-size="14" fill="#93C5FD" font-weight="bold">
+ <circle cx="150" cy="120" r="4" fill="#5EEAD4"/><text x="165" y="124">Ocular</text>
+ <circle cx="150" cy="220" r="4" fill="#5EEAD4"/><text x="165" y="224">Objetivo</text>
+ <circle cx="560" cy="300" r="4" fill="#5EEAD4"/><text x="575" y="304">Platina</text>
+ <circle cx="560" cy="90" r="4" fill="#5EEAD4"/><text x="575" y="94">Tubo</text>
+</g>
+<text x="400" y="390" font-family="sans-serif" font-size="20" font-weight="800" fill="#fff" text-anchor="middle">El microscopio: nuestra ventana a lo invisible</text>
+</svg>

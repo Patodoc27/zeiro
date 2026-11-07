@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420">
+<defs><radialGradient id="cp" cx="50%" cy="42%"><stop offset="0%" stop-color="#F0FCFA"/><stop offset="100%" stop-color="#CFFAF3"/></radialGradient></defs>
+<rect width="800" height="420" rx="24" fill="#0B3B36"/>
+<circle cx="400" cy="210" r="165" fill="url(#cp)" stroke="#14B8A6" stroke-width="10"/>
+<circle cx="400" cy="210" r="150" fill="none" stroke="#0B7A72" stroke-width="3" stroke-dasharray="4 8"/>
+<ellipse cx="365" cy="185" rx="62" ry="52" fill="#7C3AED" stroke="#4C1D95" stroke-width="5"/>
+<ellipse cx="352" cy="172" rx="18" ry="14" fill="#A78BFA"/>
+<text x="365" y="260" font-family="sans-serif" font-size="17" font-weight="bold" fill="#fff" text-anchor="middle">Núcleo</text>
+<g fill="#F59E0B" stroke="#B45309" stroke-width="3">
+ <ellipse cx="495" cy="155" rx="34" ry="17" transform="rotate(-24 495 155)"/>
+ <ellipse cx="300" cy="285" rx="34" ry="17" transform="rotate(18 300 285)"/>
+ <ellipse cx="470" cy="290" rx="30" ry="15" transform="rotate(-8 470 290)"/>
+</g>
+<path d="M472 148q10 8 22 6M280 278q10 8 22 6M448 285q9 7 20 5" stroke="#B45309" stroke-width="2.5" fill="none"/>
+<text x="545" y="140" font-family="sans-serif" font-size="15" font-weight="bold" fill="#FDE68A">Mitocondrias</text>
+<g fill="#2563EB"><circle cx="330" cy="140" r="7"/><circle cx="347" cy="130" r="7"/><circle cx="320" cy="155" r="7"/><circle cx="500" cy="235" r="7"/><circle cx="515" cy="222" r="7"/><circle cx="490" cy="250" r="7"/></g>
+<text x="255" y="118" font-family="sans-serif" font-size="15" font-weight="bold" fill="#93C5FD">Ribosomas</text>
+<path d="M560 210a8 8 0 1 1-.01 0" fill="none"/>
+<circle cx="560" cy="210" r="14" fill="#fff" stroke="#14B8A6" stroke-width="4"/>
+<text x="585" y="215" font-family="sans-serif" font-size="15" font-weight="bold" fill="#5EEAD4">Membrana</text>
+<path d="M574 200 545 190" stroke="#5EEAD4" stroke-width="2"/>
+<text x="400" y="395" font-family="sans-serif" font-size="20" font-weight="800" fill="#fff" text-anchor="middle">Célula eucariota animal — esquema simplificado</text>
+</svg>

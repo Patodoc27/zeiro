@@ -45,14 +45,14 @@
       var cursos = rs[0], anns = rs[1];
       var nombre = esc(me.full_name.indexOf(',') >= 0 ? me.full_name.split(',')[1].trim().split(' ')[0] : me.full_name.split(' ')[0]);
       var h = '<div class="hero">' +
-        '<div class="htxt"><h1>¡Hola, ' + nombre + '!</h1>' +
+        '<div class="htxt"><div class="hizq"><h1>¡Hola, ' + nombre + '!</h1>' +
         '<p>' + new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }) + '</p>' +
         '<div class="hchips">' +
         '<span class="hchip">' + ZI('book') + ' ' + cursos.length + ' curso' + (cursos.length === 1 ? '' : 's') + '</span>' +
         '<span class="hchip" id="k_entregas_wrap">' + ZI('clock') + ' <b id="k_entregas">…</b> ' + (me.role === 'estudiante' ? 'entregas próximas' : 'evaluaciones activas') + '</span>' +
         '<span class="hchip">' + ZI('mega') + ' ' + anns.length + ' comunicados</span>' +
         '<span class="hchip" id="k_alumnos_wrap">' + ZI('sparkle') + ' <b id="k_alumnos">…</b> ' + (me.role === 'estudiante' ? 'materiales nuevos' : 'estudiantes') + '</span>' +
-        '</div></div>' + Z_ZEBRA('saludo') + '</div>';
+        '</div></div>' + Z_ZEBRA('saludo') + '</div></div>';
       h += '<div class="grid" style="grid-template-columns:2fr 1fr">';
       h += '<div class="card"><div class="entre"><h2 style="font-size:17px">' + (me.role === 'estudiante' ? 'Mis cursos' : 'Cursos') + '</h2>' +
         (me.role === 'admin' ? '<button class="btn sm" id="h_ncurso">' + ZI('plus') + ' Nuevo curso</button>' : '') + '</div><div id="h_cursos" style="margin-top:14px"></div></div>';
@@ -243,7 +243,7 @@
         var c = m.content || {};
         if (m.type === 'link') return esc(c.url || '');
         if (m.type === 'file') return esc(c.file_name || 'Archivo adjunto');
-        if (m.type === 'page') return esc((c.body || '').replace(/<[^>]+>|\*+/g, '').replace(/\n+/g, ' ').slice(0, 90)) + '…';
+        if (m.type === 'page') return esc((c.body || '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/<[^>]+>|\*+|#{1,3}\s|>\s?/g, '').replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ').trim().slice(0, 90)) + '…';
         if (m.type === 'quiz') return 'Cuestionario' + (c.pass_grade ? ' · aprueba con ' + c.pass_grade : '');
         if (m.type === 'assignment') return 'Tarea' + (c.max_grade ? ' · nota máx. ' + c.max_grade : '');
         if (m.type === 'announcement') return esc((c.body || '').slice(0, 90));
