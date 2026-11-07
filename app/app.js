@@ -216,6 +216,19 @@
   }
   Z.shell = shell;
 
+  /* menús desplegables (.dd): el botón .dd-t abre/cierra; clic fuera o en un ítem cierra */
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target.closest('.dd-t') : null;
+    document.querySelectorAll('.dd.open').forEach(function (d) {
+      if (!t || d !== t.parentNode) d.classList.remove('open');
+    });
+    if (t) { t.parentNode.classList.toggle('open'); return; }
+    if (e.target.closest && e.target.closest('.ddm')) {
+      var dd = e.target.closest('.dd');
+      if (dd) dd.classList.remove('open');
+    }
+  });
+
   /* ---------------- ROUTER ---------------- */
   function render() {
     var me = Z.api.me();

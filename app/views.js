@@ -161,11 +161,13 @@
         '<div class="ah-acts">' +
           (edita
             ? '<button class="btn blanco sm" id="c_aula">' + ZI('sparkle') + ' Diseñar aula</button>' +
-              '<a class="btn blanco sm" href="#/curso/' + id + '/notas">' + ZI('star') + ' Calificaciones</a>' +
-              '<a class="btn blanco sm" href="#/curso/' + id + '/asistencia">' + ZI('asist') + ' Asistencia</a>' +
-              '<a class="btn blanco sm" href="#/progreso/' + id + '">' + ZI('cap') + ' Progreso</a>' +
-              '<a class="btn blanco sm" href="#/flashcards/' + id + '">' + ZI('book') + ' Flashcards</a>' +
-              '<button class="btn sm" id="c_addsec">' + ZI('plus') + ' Sección</button>' +
+              '<span class="dd"><button class="btn blanco sm dd-t">' + ZI('gear') + ' Gestionar ' + ZI('chev') + '</button><span class="ddm">' +
+                '<a href="#/curso/' + id + '/notas">' + ZI('star') + ' Calificaciones</a>' +
+                '<a href="#/curso/' + id + '/asistencia">' + ZI('asist') + ' Asistencia</a>' +
+                '<a href="#/progreso/' + id + '">' + ZI('cap') + ' Progreso</a>' +
+                '<a href="#/flashcards/' + id + '">' + ZI('book') + ' Flashcards</a>' +
+                '<button type="button" id="c_addsec">' + ZI('plus') + ' Nueva sección</button>' +
+              '</span></span>' +
               (c.enroll_code ? '<span class="pill" style="background:rgba(255,255,255,.22);color:#fff">Código: ' + esc(c.enroll_code) + '</span>' : '')
             : (me.role === 'estudiante' ? '<a class="btn blanco sm" href="#/curso/' + id + '/asistencia">' + ZI('asist') + ' Mi asistencia</a>' +
               '<a class="btn blanco sm" href="#/flashcards/' + id + '">' + ZI('book') + ' Flashcards</a>' +
@@ -192,10 +194,7 @@
               '<button class="iconbtn" data-delsec="' + s.id + '" title="Borrar sección">' + ZI('trash') + '</button>' : '') +
             '</header><div class="cuerpo">' +
             mods.map(function (m) { return filaModulo(m, edita); }).join('') +
-            (edita ? '<div class="fila wrap" style="margin-top:10px;gap:6px">' +
-              Object.keys(TNOMBRE).map(function (t) {
-                return '<button class="btn sec sm" data-addmod="' + s.id + '|' + t + '">' + ZI(TICON[t]) + ' ' + TNOMBRE[t] + '</button>';
-              }).join('') + '</div>' : '') +
+            (edita ? '<div class="fila" style="margin-top:10px"><button class="btn sec sm" data-addbar="' + s.id + '">' + ZI('plus') + ' Agregar actividad o recurso</button></div>' : '') +
             '</div></div>';
         };
         if (c.layout === 'solapas' && secs.length) {
@@ -229,13 +228,13 @@
         var inner = '<div class="info"><b>' + esc(m.title) + '</b> ' + etiq + '<p>' + extra + descripcionModulo(m) + '</p></div>';
         var acts = '';
         if (edita) {
-          acts = '<div class="acts">' +
-            (m.type === 'quiz' ? '<a class="iconbtn" href="#/prev-quiz/' + m.id + '" title="Previsualizar">' + ZI('eye') + '</a>' : '') +
-            '<button class="iconbtn" data-move="' + m.id + '|-1" title="Subir">' + ZI('up') + '</button>' +
-            '<button class="iconbtn" data-move="' + m.id + '|1" title="Bajar">' + ZI('down') + '</button>' +
-            '<button class="iconbtn" data-editmod="' + m.id + '" title="Editar">' + ZI('edit') + '</button>' +
-            '<button class="iconbtn" data-vismod="' + m.id + '" title="Mostrar/ocultar">' + ZI(m.visible ? 'eye' : 'eyeoff') + '</button>' +
-            '<button class="iconbtn" data-delmod="' + m.id + '" title="Borrar">' + ZI('trash') + '</button></div>';
+          acts = '<div class="acts"><span class="dd"><button class="iconbtn dd-t" title="Acciones">' + ZI('dots') + '</button><span class="ddm">' +
+            (m.type === 'quiz' ? '<a href="#/prev-quiz/' + m.id + '">' + ZI('eye') + ' Previsualizar</a>' : '') +
+            '<button type="button" data-move="' + m.id + '|-1">' + ZI('up') + ' Subir</button>' +
+            '<button type="button" data-move="' + m.id + '|1">' + ZI('down') + ' Bajar</button>' +
+            '<button type="button" data-editmod="' + m.id + '">' + ZI('edit') + ' Editar</button>' +
+            '<button type="button" data-vismod="' + m.id + '">' + ZI(m.visible ? 'eyeoff' : 'eye') + (m.visible ? ' Ocultar' : ' Mostrar') + '</button>' +
+            '<button type="button" class="pel" data-delmod="' + m.id + '">' + ZI('trash') + ' Borrar</button></span></span></div>';
           return '<div class="mod' + (m.visible ? '' : ' oculto') + '"><a href="' + href + '" style="color:var(--vio-500)">' + ZI(TICON[m.type]) + '</a>' +
             '<a href="' + href + '" style="text-decoration:none;color:inherit;flex:1;min-width:0">' + inner + '</a>' + acts + '</div>';
         }
@@ -298,11 +297,8 @@
             });
           };
         });
-        wrap.querySelectorAll('[data-addmod]').forEach(function (b) {
-          b.onclick = function () {
-            var parts = b.getAttribute('data-addmod').split('|');
-            modalModulo(c.id, parts[0], parts[1], null, pintar);
-          };
+        wrap.querySelectorAll('[data-addbar]').forEach(function (b) {
+          b.onclick = function () { modalChooser(c.id, b.getAttribute('data-addbar'), pintar); };
         });
         wrap.querySelectorAll('[data-editmod]').forEach(function (b) {
           b.onclick = function () {
@@ -365,6 +361,39 @@
   }
 
   /* ---------- editor de módulo (una sola pantalla, no 8 como Moodle) ---------- */
+  /* selector de actividad/recurso (patrón "activity chooser" de Moodle) */
+  var CH_GRUPOS = [
+    { titulo: 'Recursos', desc: 'Materiales para leer, ver o descargar', items: [
+      ['page', 'Página', 'Texto con formato, imágenes y HTML'],
+      ['libro', 'Libro', 'Contenido largo en capítulos'],
+      ['file', 'Archivo', 'Documento descargable (PDF, Word…)'],
+      ['link', 'Enlace', 'Sitio web o video externo'],
+      ['html', 'Bloque HTML', 'Incrustar iframes, widgets o video propio']
+    ] },
+    { titulo: 'Actividades', desc: 'El estudiante participa y produce', items: [
+      ['quiz', 'Cuestionario', 'Preguntas con nota automática'],
+      ['assignment', 'Tarea', 'Consigna con entrega y corrección'],
+      ['forum', 'Foro', 'Espacio de debate del aula'],
+      ['poll', 'Encuesta', 'Votación rápida con resultados'],
+      ['announcement', 'Comunicado del curso', 'Aviso destacado para todos']
+    ] }
+  ];
+  function modalChooser(courseId, sectionId, done) {
+    var v = Z.modal('<h2>Agregar a la unidad</h2>' +
+      CH_GRUPOS.map(function (g) {
+        return '<h3 class="ch-grupo">' + esc(g.titulo) + '<small>' + esc(g.desc) + '</small></h3>' +
+          '<div class="chgrid">' + g.items.map(function (it) {
+            return '<button type="button" class="chitem" data-ch="' + it[0] + '"><span class="chic">' + ZI(TICON[it[0]]) + '</span><b>' + esc(it[1]) + '</b><small>' + esc(it[2]) + '</small></button>';
+          }).join('') + '</div>';
+      }).join(''), 'xl');
+    v.querySelectorAll('[data-ch]').forEach(function (b) {
+      b.onclick = function () {
+        v.remove();
+        modalModulo(courseId, sectionId, b.getAttribute('data-ch'), null, done);
+      };
+    });
+  }
+
   function modalModulo(courseId, sectionId, tipo, m, done) {
     var c = (m && m.content) || {};
     var cuerpo = '';
