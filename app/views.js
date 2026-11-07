@@ -346,17 +346,17 @@
   function modalModulo(courseId, sectionId, tipo, m, done) {
     var c = (m && m.content) || {};
     var cuerpo = '';
-    if (tipo === 'page') cuerpo = '<label>Contenido (HTML simple permitido)</label><textarea id="mm_body" style="min-height:160px">' + esc(c.body || '') + '</textarea>';
+    if (tipo === 'page') cuerpo = '<label>Contenido (HTML simple permitido)</label>' + Z.voz.wrap('<textarea id="mm_body" style="min-height:160px">' + esc(c.body || '') + '</textarea>');
     else if (tipo === 'link') cuerpo = '<label>URL</label><input id="mm_url" value="' + esc(c.url || '') + '" placeholder="https://…">';
     else if (tipo === 'file') cuerpo = '<label>Archivo (PDF, Word, video… cualquier formato)</label><input type="file" id="mm_file">' + (c.file_name ? '<p style="font-size:12px;color:var(--neg-300)">Actual: ' + esc(c.file_name) + '</p>' : '') +
       '<p style="font-size:12px;color:var(--neg-300)">En demo se guarda el contenido hasta 4 MB; con Supabase se sube a Storage.</p>';
     else if (tipo === 'assignment') cuerpo =
-      '<label>Consigna</label><textarea id="mm_ins">' + esc(c.instructions || '') + '</textarea>' +
+      '<label>Consigna</label>' + Z.voz.wrap('<textarea id="mm_ins">' + esc(c.instructions || '') + '</textarea>') +
       '<div class="fila"><div style="width:130px"><label>Nota máx.</label><input type="number" id="mm_max" value="' + (c.max_grade || 10) + '"></div>' +
       '<div style="flex:1"><label>Fecha de entrega</label><input type="datetime-local" id="mm_due" value="' + (m && m.due_date ? m.due_date.slice(0, 16) : '') + '"></div></div>' +
       '<label style="margin-top:8px"><input type="checkbox" id="mm_late" ' + (c.allow_late ? 'checked' : '') + ' style="width:auto"> aceptar entregas fuera de término</label>';
     else if (tipo === 'quiz') cuerpo =
-      '<label>Introducción para el estudiante</label><textarea id="mm_intro" style="min-height:60px">' + esc(c.intro || '') + '</textarea>' +
+      '<label>Introducción para el estudiante</label>' + Z.voz.wrap('<textarea id="mm_intro" style="min-height:60px">' + esc(c.intro || '') + '</textarea>') +
       '<div class="grid gr4">' +
       '<div><label>Minutos</label><input type="number" id="mm_time" value="' + (c.time_limit_min || '') + '" placeholder="0 = sin límite"></div>' +
       '<div><label>Intentos</label><input type="number" id="mm_att" value="' + (c.attempts_allowed || 1) + '" min="1"></div>' +
@@ -364,8 +364,8 @@
       '<div><label>Aprueba con</label><input type="number" id="mm_pass" value="' + (c.pass_grade || 6) + '"></div></div>' +
       '<label style="margin-top:8px"><input type="checkbox" id="mm_shuf" ' + (c.shuffle ? 'checked' : '') + ' style="width:auto"> mezclar preguntas por estudiante</label>' +
       '<p style="font-size:12.5px;color:var(--neg-300);margin-top:8px">Las preguntas se editan aparte desde el ítem del curso → botón de edición → "Editar preguntas".</p>';
-    else if (tipo === 'announcement') cuerpo = '<label>Mensaje</label><textarea id="mm_body">' + esc(c.body || '') + '</textarea>';
-    else if (tipo === 'forum') cuerpo = '<label>Consigna del foro (qué se debate)</label><textarea id="mm_desc" style="min-height:90px">' + esc(c.description || '') + '</textarea>';
+    else if (tipo === 'announcement') cuerpo = '<label>Mensaje</label>' + Z.voz.wrap('<textarea id="mm_body">' + esc(c.body || '') + '</textarea>');
+    else if (tipo === 'forum') cuerpo = '<label>Consigna del foro (qué se debate)</label>' + Z.voz.wrap('<textarea id="mm_desc" style="min-height:90px">' + esc(c.description || '') + '</textarea>');
     else if (tipo === 'html') cuerpo =
       '<label>Código HTML a incrustar (iframes, widgets, simuladores…)</label>' +
       '<textarea id="mm_html" style="min-height:120px;font-family:monospace;font-size:12.5px">' + esc(c.html || '') + '</textarea>' +
@@ -459,12 +459,12 @@
         var m = found, c = fcourse;
         var h = volver('#/curso/' + c.id, esc(c.short_name || c.name)) + topbar(m.title, esc(c.name));
         if (m.type === 'forum') { location.hash = '#/foro/' + m.id; return; }
-        if (m.type === 'page') h += '<div class="card" style="max-width:860px">' + Z.md(m.content.body || '') + '</div>';
+        if (m.type === 'page') h += '<div class="card" style="max-width:860px"><div class="vozrow">' + Z.voz.readBtn('#mod_txt') + '<span>Escuchar</span></div><div id="mod_txt">' + Z.md(m.content.body || '') + '</div></div>';
         else if (m.type === 'link') h += '<div class="card"><p>' + ZI('link') + ' <a href="' + esc(m.content.url) + '" target="_blank" rel="noopener">' + esc(m.content.url) + '</a></p>' +
           '<a class="btn" href="' + esc(m.content.url) + '" target="_blank" rel="noopener" style="margin-top:8px">Abrir enlace</a></div>';
         else if (m.type === 'file') h += '<div class="card"><div class="fila">' + ZI('file') + '<b>' + esc(m.content.file_name || 'Archivo') + '</b>' +
           (m.content.file_url ? '<a class="btn sm" href="' + esc(m.content.file_url) + '" target="_blank">Descargar</a>' : '<span class="pill gris">demo</span>') + '</div></div>';
-        else if (m.type === 'announcement') h += '<div class="card">' + Z.md(m.content.body || '') + '<small style="color:var(--neg-300)">' + Z.fmtFecha(m.created_at, true) + '</small></div>';
+        else if (m.type === 'announcement') h += '<div class="card"><div class="vozrow">' + Z.voz.readBtn('#mod_txt') + '<span>Escuchar</span></div><div id="mod_txt">' + Z.md(m.content.body || '') + '</div><small style="color:var(--neg-300)">' + Z.fmtFecha(m.created_at, true) + '</small></div>';
         else if (m.type === 'html') h += '<div class="card">' + bloqueEmbed(m.content.video_url || '') + bloqueEmbed(m.content.html || '') +
           ((!m.content.video_url && !m.content.html) ? '<p style="color:var(--neg-300)">Bloque vacío.</p>' : '') + '</div>';
         var main = Z.shell(h, '#/mis-cursos');
@@ -838,7 +838,7 @@
               }
               return Z.quiz.renderReview(q, ans);
             }).join('');
-            h += '<label>Devolución (opcional)</label><textarea id="rv_fb" style="min-height:60px">' + esc(a.feedback || '') + '</textarea>' +
+            h += '<label>Devolución (opcional)</label>' + Z.voz.wrap('<textarea id="rv_fb" style="min-height:60px">' + esc(a.feedback || '') + '</textarea>') +
               '<button class="btn" id="rv_ok" style="margin-top:12px">Guardar corrección</button></div>';
             zone.innerHTML = h;
             zone.scrollIntoView({ behavior: 'smooth' });
@@ -880,7 +880,7 @@
           var cfg = cm.content || {};
           var vencida = cm.due_date && new Date(cm.due_date) < new Date();
           var h = volver('#/curso/' + cc.id, esc(cc.short_name || cc.name)) + topbar(cm.title, 'Tarea · ' + esc(cc.name));
-          h += '<div class="card" style="max-width:760px">' + Z.md(cfg.instructions || '') +
+          h += '<div class="card" style="max-width:760px"><div class="vozrow">' + Z.voz.readBtn('#en_cons') + '<span>Escuchar consigna</span></div><div id="en_cons">' + Z.md(cfg.instructions || '') + '</div>' +
             '<div class="fila wrap" style="margin:10px 0">' +
             (cm.due_date ? '<span class="pill ' + (vencida ? 'mal' : 'azu') + '">' + ZI('clock') + ' ' + Z.fmtFecha(cm.due_date, true) + '</span>' : '') +
             '<span class="pill vio">Nota máx. ' + (cfg.max_grade || 10) + '</span>' +
@@ -904,7 +904,7 @@
           if (sub && sub.grade != null) {
             h += '<div class="pill tur">Ya está corregida — no se puede reenviar</div>';
           } else if (puede) {
-            h += '<label>Texto de la entrega</label><textarea id="en_body" placeholder="Escribí tu respuesta o describí lo que entregás…">' + esc(sub ? sub.body || '' : '') + '</textarea>' +
+            h += '<label>Texto de la entrega</label>' + Z.voz.wrap('<textarea id="en_body" placeholder="Escribí tu respuesta o describí lo que entregás… (podés dictarlo con el micrófono)">' + esc(sub ? sub.body || '' : '') + '</textarea>') +
               '<label>Archivos (Word, PDF, video, imágenes… cualquier formato, hasta 5)</label>' +
               '<input type="file" id="en_files" multiple>' +
               '<div id="en_flist" class="flist"></div>' +
@@ -1164,7 +1164,8 @@
           return '<div class="card"><div class="fila"><span class="pill ' + (a.course_id ? 'vio' : 'neg') + '">' + esc(a.course_name) + '</span>' +
             '<span class="pill gris">' + esc(a.audience) + '</span>' +
             '<small style="margin-left:auto;color:var(--neg-300)">' + esc(a.author_name || '') + ' · ' + Z.fmtFecha(a.created_at, true) + '</small></div>' +
-            '<h3 style="margin:8px 0 4px">' + esc(a.title) + '</h3><p style="margin:0">' + esc(a.body) + '</p></div>';
+            '<div id="av-' + a.id + '"><h3 style="margin:8px 0 4px">' + esc(a.title) + '</h3><p style="margin:0">' + esc(a.body) + '</p></div>' +
+            '<div class="vozrow" style="margin-top:6px">' + Z.voz.readBtn('#av-' + a.id) + '<span>Escuchar</span></div></div>';
         }).join('') : '<div class="card vacio">' + ZI('mega') + '<p>Sin comunicados.</p></div>') + '</div>';
       var main = Z.shell(h, '#/comunicados');
       var nb = main.querySelector('#cm_new');
@@ -1173,7 +1174,7 @@
           '<label>Destino</label><select id="cn_dest"><option value="">General (todo el colegio)</option>' +
           cursos.map(function (c) { return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('') + '</select>' +
           '<label>Audiencia</label><select id="cn_aud"><option value="todos">Todos</option><option value="estudiantes">Estudiantes</option><option value="docentes">Docentes</option></select>' +
-          '<label>Título</label><input id="cn_t"><label>Mensaje</label><textarea id="cn_b"></textarea>' +
+          '<label>Título</label><input id="cn_t"><label>Mensaje</label>' + Z.voz.wrap('<textarea id="cn_b"></textarea>') +
           '<div class="fila" style="justify-content:flex-end;margin-top:14px"><button class="btn sec" data-x>Cancelar</button><button class="btn" data-ok>Publicar</button></div>');
         v.querySelector('[data-x]').onclick = function () { v.remove(); };
         v.querySelector('[data-ok]').onclick = function () {
@@ -1354,7 +1355,7 @@
       }).join('') + '</div><p style="font-size:11.5px;color:var(--neg-300);margin:3px 0 0">Solapas: cada unidad es una pestaña.</p></div></div>' +
       '<label>Patrón de la portada</label><div class="fila wrap" id="ap_pats">' +
       pats.map(function (p) { return '<button type="button" class="patopt' + ((c.pattern || 'liso') === p[0] ? ' on' : '') + '" data-pat="' + p[0] + '">' + p[1] + '</button>'; }).join('') + '</div>' +
-      '<label>Mensaje de bienvenida para el aula</label><textarea id="ap_welcome" style="min-height:70px" placeholder="Ej.: ¡Bienvenides! Acá van a encontrar todo lo de la materia.">' + esc(c.welcome || '') + '</textarea>' +
+      '<label>Mensaje de bienvenida para el aula</label>' + Z.voz.wrap('<textarea id="ap_welcome" style="min-height:70px" placeholder="Ej.: ¡Bienvenides! Acá van a encontrar todo lo de la materia.">' + esc(c.welcome || '') + '</textarea>') +
       '<div class="fila" style="justify-content:flex-end;margin-top:14px"><button class="btn sec" data-x>Cancelar</button><button class="btn" data-ok>Guardar diseño</button></div>', true);
     var sel = c.pattern || 'liso';
     var lay = c.layout || 'lista';
@@ -1454,7 +1455,7 @@
           var h = volver('#/curso/' + cc.id, esc(cc.short_name || cc.name)) +
             topbar(cm.title, esc(cc.name) + ' · ' + hilos.length + ' tema' + (hilos.length === 1 ? '' : 's'),
               '<button class="btn" id="f_new">' + ZI('plus') + ' Nuevo tema</button>');
-          if (cm.content && (cm.content.description || cm.content.topic)) h += '<div class="card" style="margin-bottom:14px">' + Z.md(cm.content.description || cm.content.topic) + '</div>';
+          if (cm.content && (cm.content.description || cm.content.topic)) h += '<div class="card" style="margin-bottom:14px"><div class="vozrow">' + Z.voz.readBtn('#foro_desc') + '<span>Escuchar</span></div><div id="foro_desc">' + Z.md(cm.content.description || cm.content.topic) + '</div></div>';
           h += hilos.length ? hilos.map(function (p) {
             return '<div class="hilo"><div class="fila"><div class="avatar" style="width:34px;height:34px;font-size:13px">' + esc((p.author_name || '?').slice(0, 2).toUpperCase()) + '</div>' +
               '<div style="flex:1;min-width:0"><b>' + esc(p.title || 'Tema') + '</b><br><small style="color:var(--neg-300)">' + esc(p.author_name) + ' · ' + Z.fmtFecha(p.created_at, true) + '</small></div>' +
@@ -1465,7 +1466,7 @@
                   '<p style="margin:4px 0 0">' + esc(r.body) + '</p>' +
                   (puedeBorrar(r) ? '<button class="iconbtn" data-del="' + r.id + '" style="position:absolute;top:6px;right:6px">' + ZI('trash') + '</button>' : '') + '</div>';
               }).join('') +
-              '<div class="fila" style="margin-top:8px"><input data-resp="' + p.id + '" placeholder="Respondé acá…" style="flex:1">' +
+              '<div class="fila" style="margin-top:8px">' + Z.voz.wrap('<input type="text" data-resp="' + p.id + '" placeholder="Respondé acá…" style="flex:1">') +
               '<button class="btn tur sm" data-go="' + p.id + '">' + ZI('send') + '</button></div></div>';
           }).join('') : '<div class="card vacio">' + Z_ZEBRA('pensar') + '<p>Nadie abrió un tema todavía. ¡Sé la primera persona!</p></div>';
           var main = Z.shell(h, '#/mis-cursos');
@@ -1491,7 +1492,7 @@
           });
           main.querySelector('#f_new').onclick = function () {
             var v = Z.modal('<h2>Nuevo tema</h2><label>Título</label><input id="ft_t" placeholder="¿De qué querés hablar?">' +
-              '<label>Mensaje</label><textarea id="ft_b" style="min-height:100px"></textarea>' +
+              '<label>Mensaje</label>' + Z.voz.wrap('<textarea id="ft_b" style="min-height:100px"></textarea>') +
               '<div class="fila" style="justify-content:flex-end;margin-top:14px"><button class="btn sec" data-x>Cancelar</button><button class="btn" data-ok>Publicar</button></div>');
             v.querySelector('[data-x]').onclick = function () { v.remove(); };
             v.querySelector('[data-ok]').onclick = function () {

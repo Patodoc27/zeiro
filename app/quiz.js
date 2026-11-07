@@ -37,7 +37,7 @@
           R.map(function (r) { return '<option>' + esc(r) + '</option>'; }).join('') + '</select></div>';
       });
     } else if (q.type === 'essay') {
-      h += '<textarea data-essay="1" placeholder="Escribí tu desarrollo…"></textarea>';
+      h += (window.Z && Z.voz ? Z.voz.wrap('<textarea data-essay="1" placeholder="Escribí tu desarrollo… (o dictalo con el micrófono)"></textarea>') : '<textarea data-essay="1" placeholder="Escribí tu desarrollo…"></textarea>');
     }
     return h + '</div>';
   }
