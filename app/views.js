@@ -1802,7 +1802,7 @@
           (b.ok ? '' : '<small class="tdv">Todavía no</small>') + '</div>';
       }).join('') + '</div>';
       if (tabla && tabla.length) {
-        h += '<div class="card" style="max-width:none"><h3 style="margin:0 0 10px;font-size:15px">Tabla de posiciones</h3>' +
+        h += '<div class="card" style="max-width:none;margin-top:26px"><h3 style="margin:0 0 10px;font-size:15px">Tabla de posiciones</h3>' +
           tabla.slice(0, 10).map(function (t, ix) {
             return '<div class="hilo"><span class="pos-n">' + (ix + 1) + '°</span>' +
               '<span class="h-txt"><b>' + esc(t.name) + '</b></span><span class="pill ' + (ix === 0 ? 'vio' : 'gris') + '">' + t.pts + ' XP</span></div>';
