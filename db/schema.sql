@@ -172,7 +172,9 @@ create table if not exists public.submissions (
   module_id     uuid not null references public.modules(id) on delete cascade,
   student_id    uuid not null references public.profiles(id) on delete cascade,
   body          text,
-  file_url      text,
+  file_url      text,                          -- legado: nombre del primer adjunto
+  files         jsonb not null default '[]'::jsonb, -- [{name,url,size}] varios adjuntos
+  link          text,                          -- enlace entregado por el estudiante
   embed_html    text,                          -- HTML/video incrustado por el estudiante
   submitted_at  timestamptz not null default now(),
   grade         numeric,

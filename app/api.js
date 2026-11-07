@@ -464,19 +464,25 @@
           return (r.data || []).map(function (s) { s.student_name = s.student && s.student.full_name; return s; });
         });
     },
-    submitAssignment: function (moduleId, body, fileName, embedHtml) {
+    submitAssignment: function (moduleId, data) {
+      // data: {body, link, embed, files:[{name,url,size}]}
       if (useDemo) {
         var d = load();
         var s = null;
         d.submissions.forEach(function (x) { if (x.module_id === moduleId && x.student_id === me.id) s = x; });
         if (!s) { s = { id: uid(d, 'sb'), module_id: moduleId, student_id: me.id }; d.submissions.push(s); }
-        s.body = body; s.file_url = fileName || s.file_url || null; s.submitted_at = now();
-        if (embedHtml !== undefined) s.embed = embedHtml || null;
+        s.body = data.body || '';
+        s.link = data.link || null;
+        s.embed = data.embed || null;
+        s.files = data.files || [];
+        s.submitted_at = now();
         save(d); return Promise.resolve(clone(s));
       }
       return supa().from('submissions').upsert({
-        module_id: moduleId, student_id: me.id, body: body,
-        file_url: fileName || null, embed_html: embedHtml || null, submitted_at: now()
+        module_id: moduleId, student_id: me.id, body: data.body || '',
+        link: data.link || null, embed_html: data.embed || null,
+        files: data.files || [], file_url: data.files && data.files[0] ? data.files[0].name : null,
+        submitted_at: now()
       }, { onConflict: 'module_id,student_id' }).select().single().then(function (r) { return r.data; });
     },
     gradeSubmission: function (id, grade, feedback) {

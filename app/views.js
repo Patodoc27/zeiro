@@ -348,8 +348,8 @@
     var cuerpo = '';
     if (tipo === 'page') cuerpo = '<label>Contenido (HTML simple permitido)</label><textarea id="mm_body" style="min-height:160px">' + esc(c.body || '') + '</textarea>';
     else if (tipo === 'link') cuerpo = '<label>URL</label><input id="mm_url" value="' + esc(c.url || '') + '" placeholder="https://…">';
-    else if (tipo === 'file') cuerpo = '<label>Archivo</label><input type="file" id="mm_file">' + (c.file_name ? '<p style="font-size:12px;color:var(--neg-300)">Actual: ' + esc(c.file_name) + '</p>' : '') +
-      '<p style="font-size:12px;color:var(--neg-300)">En modo demo se guarda solo el nombre; con Supabase se sube a Storage.</p>';
+    else if (tipo === 'file') cuerpo = '<label>Archivo (PDF, Word, video… cualquier formato)</label><input type="file" id="mm_file">' + (c.file_name ? '<p style="font-size:12px;color:var(--neg-300)">Actual: ' + esc(c.file_name) + '</p>' : '') +
+      '<p style="font-size:12px;color:var(--neg-300)">En demo se guarda el contenido hasta 4 MB; con Supabase se sube a Storage.</p>';
     else if (tipo === 'assignment') cuerpo =
       '<label>Consigna</label><textarea id="mm_ins">' + esc(c.instructions || '') + '</textarea>' +
       '<div class="fila"><div style="width:130px"><label>Nota máx.</label><input type="number" id="mm_max" value="' + (c.max_grade || 10) + '"></div>' +
@@ -427,11 +427,18 @@
           .then(function () { v.remove(); Z.toast('Guardado', 'ok'); done && done(); });
       };
       var vf = v.querySelector('#mm_vfile');
+      var mf = v.querySelector('#mm_file');
       if (tipo === 'html' && vf && vf.files[0]) {
         if (vf.files[0].size > 4000000) return Z.toast('El video pesa demasiado (máx. 4 MB en demo)', 'mal');
         var r = new FileReader();
         r.onload = function () { content.video_url = r.result; guardar(); };
         r.readAsDataURL(vf.files[0]);
+      } else if (tipo === 'file' && mf && mf.files[0] && mf.files[0].size <= 4000000) {
+        var r2 = new FileReader();
+        r2.onload = function () { content.file_url = r2.result; guardar(); };
+        r2.readAsDataURL(mf.files[0]);
+      } else if (tipo === 'file' && mf && mf.files[0]) {
+        Z.toast('Archivo grande: se guarda solo el nombre en demo', 'mal'); guardar();
       } else guardar();
     };
   }
@@ -873,7 +880,7 @@
           var cfg = cm.content || {};
           var vencida = cm.due_date && new Date(cm.due_date) < new Date();
           var h = volver('#/curso/' + cc.id, esc(cc.short_name || cc.name)) + topbar(cm.title, 'Tarea · ' + esc(cc.name));
-          h += '<div class="card" style="max-width:760px"><p>' + (cfg.instructions || '') + '</p>' +
+          h += '<div class="card" style="max-width:760px">' + Z.md(cfg.instructions || '') +
             '<div class="fila wrap" style="margin:10px 0">' +
             (cm.due_date ? '<span class="pill ' + (vencida ? 'mal' : 'azu') + '">' + ZI('clock') + ' ' + Z.fmtFecha(cm.due_date, true) + '</span>' : '') +
             '<span class="pill vio">Nota máx. ' + (cfg.max_grade || 10) + '</span>' +
@@ -882,9 +889,14 @@
             h += '<div class="preg" style="background:var(--tur-50);border-color:var(--tur-300)"><b>Devolución:</b> ' + esc(sub.feedback || '—') + '</div>';
           }
           if (sub) {
+            var archivos = (sub.files && sub.files.length ? sub.files : (sub.file_url ? [{ name: sub.file_url }] : []));
             h += '<h3 style="font-size:14px;margin:12px 0 6px">Tu entrega · ' + Z.fmtFecha(sub.submitted_at, true) + '</h3>' +
               '<div class="card" style="box-shadow:none;background:var(--papel)">' + esc(sub.body || '') +
-              (sub.file_url ? '<p style="margin-top:6px">' + ZI('file') + ' ' + esc(sub.file_url) + '</p>' : '') +
+              archivos.map(function (f) {
+                return '<p style="margin-top:6px">' + (f.url ? '<a href="' + esc(f.url) + '" download="' + esc(f.name) + '">' : '<span>') +
+                  ZI('file') + ' ' + esc(f.name) + (f.url ? '</a>' : '</span>') + '</p>';
+              }).join('') +
+              (sub.link ? '<p style="margin-top:6px">' + ZI('link') + ' <a href="' + esc(sub.link) + '" target="_blank" rel="noopener">' + esc(sub.link) + '</a></p>' : '') +
               bloqueEmbed(sub.embed || '') + '</div>';
           }
           var puede = (!vencida || cfg.allow_late) && !(sub && sub.grade != null);
@@ -892,8 +904,11 @@
           if (sub && sub.grade != null) {
             h += '<div class="pill tur">Ya está corregida — no se puede reenviar</div>';
           } else if (puede) {
-            h += '<label>Texto de la entrega</label><textarea id="en_body" placeholder="Escribí tu respuesta o describí el adjunto…">' + esc(sub ? sub.body || '' : '') + '</textarea>' +
-              '<label>Adjunto (opcional)</label><input type="file" id="en_file">' +
+            h += '<label>Texto de la entrega</label><textarea id="en_body" placeholder="Escribí tu respuesta o describí lo que entregás…">' + esc(sub ? sub.body || '' : '') + '</textarea>' +
+              '<label>Archivos (Word, PDF, video, imágenes… cualquier formato, hasta 5)</label>' +
+              '<input type="file" id="en_files" multiple>' +
+              '<div id="en_flist" class="flist"></div>' +
+              '<label>Enlace (opcional): Drive, YouTube, Canva…</label><input id="en_link" placeholder="https://…" value="' + esc(sub ? sub.link || '' : '') + '">' +
               '<label>Incrustar contenido (opcional): código HTML o enlace de video</label>' +
               '<textarea id="en_embed" style="min-height:70px;font-family:monospace;font-size:12.5px" placeholder="<iframe …></iframe>  o  https://…/video.mp4">' + esc(sub ? sub.embed || '' : '') + '</textarea>' +
               '<button class="btn" id="en_ok" style="margin-top:12px">' + ZI('send') + ' Enviar</button>';
@@ -902,16 +917,37 @@
           }
           h += '</div>';
           var main = Z.shell(h, '#/mis-cursos');
+          var finput = main.querySelector('#en_files'), flist = main.querySelector('#en_flist');
+          if (finput) finput.onchange = function () {
+            flist.innerHTML = Array.prototype.map.call(finput.files, function (f) {
+              return '<span class="pill vio" style="margin:4px 6px 0 0">' + ZI('file') + ' ' + esc(f.name) + ' <small>(' + Math.ceil(f.size / 1024) + ' KB)</small></span>';
+            }).join('');
+          };
           var b = main.querySelector('#en_ok');
           if (b) b.onclick = function () {
             var txt = main.querySelector('#en_body').value;
-            var f = main.querySelector('#en_file').files[0];
+            var fs = finput ? Array.prototype.slice.call(finput.files) : [];
             var emb = main.querySelector('#en_embed').value;
-            if (!txt.trim() && !f && !emb.trim()) return Z.toast('Escribí algo o adjuntá un archivo', 'mal');
+            var lnk = main.querySelector('#en_link').value.trim();
+            if (!txt.trim() && !fs.length && !emb.trim() && !lnk) return Z.toast('Escribí algo, adjuntá un archivo o pegá un enlace', 'mal');
+            if (fs.length > 5) return Z.toast('Máximo 5 archivos', 'mal');
+            for (var i = 0; i < fs.length; i++) if (fs[i].size > 4000000) return Z.toast('"' + fs[i].name + '" pesa más de 4 MB', 'mal');
             b.disabled = true; b.textContent = 'Enviando…';
-            api().submitAssignment(mid, txt, f ? f.name : null, emb.trim() || null)
-              .then(function () { Z.toast('Entrega enviada', 'ok'); entrega(mid); })
-              .catch(function () { b.disabled = false; b.textContent = 'Enviar'; Z.toast('No se pudo enviar', 'mal'); });
+            var files = [], leidos = 0;
+            var enviar = function () {
+              api().submitAssignment(mid, { body: txt, link: lnk || null, embed: emb.trim() || null, files: files })
+                .then(function () { Z.toast('Entrega enviada', 'ok'); entrega(mid); })
+                .catch(function () { b.disabled = false; b.textContent = 'Enviar'; Z.toast('No se pudo enviar', 'mal'); });
+            };
+            if (!fs.length) return enviar();
+            fs.forEach(function (f) {
+              var r = new FileReader();
+              r.onload = function () {
+                files.push({ name: f.name, url: r.result, size: f.size });
+                if (++leidos === fs.length) enviar();
+              };
+              r.readAsDataURL(f);
+            });
           };
         }
       });
@@ -945,6 +981,10 @@
               return '<tr><td><b>' + esc(s.student_name || '') + '</b>' + (cm.due_date && s.submitted_at > cm.due_date ? ' <span class="pill mal" style="font-size:10px">tarde</span>' : '') + '</td>' +
                 '<td>' + Z.fmtFecha(s.submitted_at, true) + '</td>' +
                 '<td style="max-width:260px"><div style="max-height:60px;overflow:auto;font-size:12.5px">' + esc(s.body || '') + (s.file_url ? ' · ' + ZI('file') + ' ' + esc(s.file_url) : '') + '</div>' +
+                ((s.files || []).map(function (f) {
+                  return f.url ? '<div><a href="' + esc(f.url) + '" download="' + esc(f.name) + '" style="font-size:12px">' + ZI('file') + ' ' + esc(f.name) + '</a></div>' : '';
+                }).join('')) +
+                (s.link ? '<div><a href="' + esc(s.link) + '" target="_blank" rel="noopener" style="font-size:12px">' + ZI('link') + ' ' + esc(s.link.slice(0, 40)) + '</a></div>' : '') +
                 (s.embed ? '<details class="embver"><summary>' + ZI('code') + ' Ver incrustado</summary>' + bloqueEmbed(s.embed) + '</details>' : '') + '</td>' +
                 '<td class="num"><input class="nota" type="number" min="0" max="' + ((cm.content || {}).max_grade || 10) + '" step="0.5" data-nota="' + s.id + '" value="' + (s.grade == null ? '' : s.grade) + '"></td>' +
                 '<td><input type="text" data-fb="' + s.id + '" value="' + esc(s.feedback || '') + '" placeholder="Devolución…" style="min-width:150px"></td>' +
