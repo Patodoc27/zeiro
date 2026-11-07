@@ -1796,9 +1796,10 @@
       }
       h += '<div class="grid gr3">' + defs.map(function (b) {
         return '<div class="insignia ' + (b.ok ? 'ganada' : 'locked') + '">' +
-          '<div class="stick">' + ZI(b.icon) + '</div>' +
+          (b.ok ? '<div class="stick">¡Ganada!</div>' : '') +
+          '<div class="med">' + ZI(b.icon) + '</div>' +
           '<b>' + esc(b.nombre) + '</b><small>' + esc(b.desc) + '</small>' +
-          (b.ok ? '<div class="med">' + ZI('award') + ' ¡Ganada!</div>' : '<small style="color:var(--neg-150)">Todavía no</small>') + '</div>';
+          (b.ok ? '' : '<small class="tdv">Todavía no</small>') + '</div>';
       }).join('') + '</div>';
       if (tabla && tabla.length) {
         h += '<div class="card" style="max-width:none"><h3 style="margin:0 0 10px;font-size:15px">Tabla de posiciones</h3>' +

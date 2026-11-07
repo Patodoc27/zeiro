@@ -6,9 +6,9 @@
    pendiente · negro=institucional/riesgo · grises=sin dato.
    ============================================================ */
 :root{
-  --vio-900:#3B1478; --vio-700:#5B21B6; --vio-500:#7C3AED; --vio-300:#C4B5FD; --vio-100:#EDE9FE; --vio-50:#F6F3FE;
-  --tur-700:#0B7A72; --tur-500:#14B8A6; --tur-300:#5EEAD4; --tur-100:#CFFAF3; --tur-50:#F0FCFA;
-  --azu-800:#1E3A8A; --azu-600:#2563EB; --azu-400:#60A5FA; --azu-100:#DBEAFE; --azu-50:#EFF5FF;
+  --vio-900:#3B1478; --vio-700:#5B21B6; --vio-600:#6D28D9; --vio-500:#7C3AED; --vio-300:#C4B5FD; --vio-100:#EDE9FE; --vio-50:#F6F3FE;
+  --tur-700:#0B7A72; --tur-600:#0D9488; --tur-500:#14B8A6; --tur-300:#5EEAD4; --tur-100:#CFFAF3; --tur-50:#F0FCFA;
+  --azu-800:#1E3A8A; --azu-600:#2563EB; --azu-500:#3B82F6; --azu-400:#60A5FA; --azu-100:#DBEAFE; --azu-50:#EFF5FF;
   --neg-900:#0C0C14; --neg-700:#1B1B28; --neg-500:#3A3A4E; --neg-300:#8B8B9E; --neg-150:#C9C9D6;
   --blanco:#FFFFFF; --papel:#F7F7FB; --linea:#E4E4EF;
   --ok:var(--tur-700); --ok-bg:var(--tur-100);
@@ -274,10 +274,10 @@ label{font-size:12.5px;font-weight:600;color:var(--neg-500);display:block;margin
   background:var(--blanco);transition:.16s;position:relative}
 .insignia.ganada{border-color:var(--tur-300);background:linear-gradient(180deg,var(--tur-50),#fff)}
 .insignia.ganada:hover{transform:translateY(-3px) rotate(-1deg);border-color:var(--tur-500)}
-.insignia.locked{opacity:.5;filter:grayscale(.85)}
+.insignia.locked .med{background:var(--neg-150);box-shadow:none;color:var(--neg-300)}
+.insignia .tdv{display:block;margin-top:5px;color:var(--neg-300);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
 .insignia .med{width:56px;height:56px;margin:0 auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(135deg,var(--vio-500),var(--azu-600));color:#fff;box-shadow:0 6px 14px rgba(91,33,182,.3)}
-.insignia.locked .med{background:var(--neg-150);box-shadow:none;color:var(--neg-300)}
 .insignia .med .ic{width:26px;height:26px}
 .insignia b{display:block;font-size:13px;color:var(--neg-900)}
 .insignia small{color:var(--neg-300);font-size:11.5px;line-height:1.3;display:block;margin-top:3px}
