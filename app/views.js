@@ -7,12 +7,20 @@
   var TNOMBRE = { page: 'Página', libro: 'Libro', file: 'Archivo', link: 'Enlace', quiz: 'Cuestionario', assignment: 'Tarea', announcement: 'Comunicado del curso', forum: 'Foro', html: 'Bloque HTML', poll: 'Encuesta' };
   var TIPO_ES = { page: 'página', libro: 'libro', file: 'archivo', link: 'enlace', quiz: 'cuestionario', assignment: 'tarea', announcement: 'comunicado', forum: 'foro', html: 'html', manual: 'manual', poll: 'encuesta' };
 
-  /* render seguro de HTML incrustado (iframe aislado); si es una URL, reproductor de video */
+  /* render seguro de HTML incrustado: código iframe/embed, URL de video o URL embebible */
+  var SBX = 'sandbox="allow-scripts allow-forms allow-popups allow-presentation allow-same-origin"';
   function bloqueEmbed(code) {
     if (!code || !code.trim()) return '';
     var t = code.trim();
-    if (t.indexOf('<') === 0) return '<iframe class="embed" sandbox="allow-scripts allow-popups" srcdoc="' + esc(t) + '"></iframe>';
-    if (/^https?:\/\//i.test(t)) return '<video class="embed vid" controls src="' + esc(t) + '"></video>';
+    var yt = t.match(/(?:youtube\.com\/(?:watch\?[^ ]*v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{6,})/);
+    if (yt) return '<iframe class="embed" src="https://www.youtube.com/embed/' + yt[1] + '" allow="accelerometer;autoplay;encrypted-media;picture-in-picture" allowfullscreen ' + SBX + '></iframe>';
+    var vi = t.match(/vimeo\.com\/(\d+)/);
+    if (vi) return '<iframe class="embed" src="https://player.vimeo.com/video/' + vi[1] + '" allowfullscreen ' + SBX + '></iframe>';
+    if (t.indexOf('<') !== -1) return '<iframe class="embed" ' + SBX + ' allowfullscreen srcdoc="' + esc(t) + '"></iframe>';
+    if (/^https?:\/\//i.test(t)) {
+      if (/\.(mp4|webm|mov|ogv)(\?|#|$)/i.test(t)) return '<video class="embed vid" controls src="' + esc(t) + '"></video>';
+      return '<iframe class="embed" ' + SBX + ' allowfullscreen src="' + esc(t) + '" loading="lazy"></iframe>';
+    }
     return '';
   }
 
@@ -428,6 +436,7 @@
     else if (tipo === 'html') cuerpo =
       '<label>Código HTML a incrustar (iframes, widgets, simuladores…)</label>' +
       '<textarea id="mm_html" style="min-height:120px;font-family:monospace;font-size:12.5px">' + esc(c.html || '') + '</textarea>' +
+      '<p style="font-size:12px;color:var(--neg-300);margin:4px 0 0">Pegá cualquier código de incrustado: iframe de YouTube, Genially, cuestionarios externos, simuladores, widgets. También sirve la URL suelta del video o sitio.</p>' +
       '<div id="mm_prev"></div>' +
       '<label>Video propio (opcional)</label><input type="file" id="mm_vfile" accept="video/*">' +
       '<label style="margin-top:4px">…o URL de video</label><input id="mm_vurl" value="' + esc(c.video_url || '') + '" placeholder="https://…/video.mp4">';
@@ -1566,6 +1575,11 @@
       '<div class="fila" style="margin-top:14px"><div style="width:130px"><label>Color del aula</label>' +
       '<input type="color" id="ap_color" value="' + esc(c.color || '#7C3AED') + '" style="padding:3px;height:40px"></div>' +
       '<div style="flex:1"><label>Sigla en la banda</label><input id="ap_sigla" maxlength="4" value="' + esc(c.sigla || c.short_name || '') + '" placeholder="BIO"></div></div>' +
+      '<label>Fondo del banner — elegí uno o subí el tuyo</label><div class="bng-grid" id="ap_bngs">' +
+      [['quebrada','Quebrada'],['ciencia','Ciencia'],['geometria','Geometría'],['ondas','Ondas'],['galaxia','Galaxia'],['naturaleza','Naturaleza'],['tech','Digital'],['papel','Papel']].map(function (b) {
+        var url = 'assets/banners/' + b[0] + '.svg';
+        return '<button type="button" class="bng' + (c.banner_url === url ? ' on' : '') + '" data-bng="' + url + '" style="background-image:url(' + url + ')" title="' + b[1] + '"><span>' + b[1] + '</span></button>';
+      }).join('') + '</div>' +
       '<div class="fila"><div style="flex:1"><label>Imagen de portada (opcional)</label><input type="file" id="ap_banner" accept="image/*">' +
       (c.banner_url ? '<label style="margin-top:4px"><input type="checkbox" id="ap_nobanner" style="width:auto"> quitar imagen actual</label>' : '') + '</div>' +
       '<div style="width:170px"><label>Organización del aula</label><div class="fila" id="ap_lays">' +
@@ -1602,6 +1616,15 @@
       r.onload = function () { banner = r.result; pintar(); };
       r.readAsDataURL(f);
     };
+    v.querySelectorAll('[data-bng]').forEach(function (b) {
+      b.onclick = function () {
+        banner = b.getAttribute('data-bng');
+        var nb = v.querySelector('#ap_nobanner'); if (nb) nb.checked = false;
+        var bf2 = v.querySelector('#ap_banner'); if (bf2) bf2.value = '';
+        v.querySelectorAll('#ap_bngs .bng').forEach(function (x) { x.classList.remove('on'); });
+        b.classList.add('on'); pintar();
+      };
+    });
     v.querySelectorAll('[data-pat]').forEach(function (b) {
       b.onclick = function () {
         sel = b.getAttribute('data-pat');

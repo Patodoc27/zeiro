@@ -409,12 +409,22 @@ a.hilo:hover{border-color:var(--vio-300);text-decoration:none;box-shadow:var(--s
 @media (max-width:899px){.zbell{top:10px;right:10px}.topbar{padding-right:54px}}
 
 /* ---------- aula personalizable ---------- */
+.bng-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px}
+.bng{position:relative;height:56px;border-radius:11px;border:2px solid var(--linea);cursor:pointer;
+  background-size:cover;background-position:center;overflow:hidden;padding:0;transition:all .15s}
+.bng:hover{transform:translateY(-1px);border-color:var(--vio-500)}
+.bng.on{border-color:var(--vio-600);box-shadow:0 0 0 3px var(--vio-100)}
+.bng.on::after{content:'';position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:50%;
+  background:var(--vio-600) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") center/10px no-repeat}
+.bng span{position:absolute;left:6px;bottom:5px;font:800 9.5px var(--fuente);color:#fff;
+  text-shadow:0 1px 4px rgba(0,0,0,.8);letter-spacing:.3px}
 .aula-hero{position:relative;border-radius:18px;overflow:hidden;margin-bottom:18px;color:#fff;
   box-shadow:0 10px 30px rgba(28,16,66,.28);display:flex;align-items:stretch;min-height:120px}
 .aula-hero .pat{position:absolute;inset:0;pointer-events:none}
-.aula-hero .ah-txt{position:relative;padding:20px 24px;flex:1;min-width:0}
-.aula-hero .ah-txt h1{margin:8px 0 4px;font-size:26px;letter-spacing:.2px}
-.aula-hero .ah-txt p{margin:0;opacity:.85;font-size:13.5px}
+.aula-hero .ah-txt{position:relative;padding:20px 24px;flex:1;min-width:0;
+  background:linear-gradient(90deg,rgba(16,8,38,.5) 0%,rgba(16,8,38,.22) 55%,transparent 90%)}
+.aula-hero .ah-txt h1{margin:8px 0 4px;font-size:26px;letter-spacing:.2px;text-shadow:0 2px 8px rgba(10,4,28,.55)}
+.aula-hero .ah-txt p{margin:0;opacity:.95;font-size:13.5px;text-shadow:0 1px 4px rgba(10,4,28,.6)}
 .aula-hero .sigla{display:inline-block;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.65);
   color:#fff;font-weight:900;font-size:13px;letter-spacing:1.5px;padding:3px 10px;border-radius:8px}
 .aula-hero .ah-wel{margin-top:10px;background:rgba(255,255,255,.16);border-left:4px solid rgba(255,255,255,.7);
@@ -432,9 +442,10 @@ a.hilo:hover{border-color:var(--vio-300);text-decoration:none;box-shadow:var(--s
   font-weight:900;font-size:12px;letter-spacing:1px;padding:2px 8px;border-radius:7px}
 .aula-prev{position:relative;border-radius:14px;overflow:hidden;min-height:110px;color:#fff;display:flex}
 .aula-prev .pat{position:absolute;inset:0;pointer-events:none}
-.aula-prev .ah-txt{position:relative;padding:16px 18px}
-.aula-prev .ah-txt h1{margin:6px 0 2px;font-size:20px}
-.aula-prev .ah-txt p{margin:0;font-size:13px;opacity:.9}
+.aula-prev .ah-txt{position:relative;padding:16px 18px;
+  background:linear-gradient(90deg,rgba(16,8,38,.5) 0%,rgba(16,8,38,.22) 55%,transparent 90%)}
+.aula-prev .ah-txt h1{margin:6px 0 2px;font-size:20px;text-shadow:0 2px 8px rgba(10,4,28,.55)}
+.aula-prev .ah-txt p{margin:0;font-size:13px;opacity:.95;text-shadow:0 1px 4px rgba(10,4,28,.6)}
 .aula-prev .sigla{display:inline-block;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.65);
   color:#fff;font-weight:900;font-size:12px;letter-spacing:1.5px;padding:2px 9px;border-radius:7px}
 .patopt{border:1.5px solid var(--linea);background:#fff;border-radius:10px;padding:8px 14px;
