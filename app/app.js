@@ -47,36 +47,46 @@
 
   /* markdown lite: **negrita**, *cursiva*, saltos de línea, listas con - */
   Z.md = function (txt) {
-    /* markdown ligero: **b** *i* # h ## h ### h - lista > cita --- línea !img[]() [txt](url) */
-    var t = esc(txt || '');
-    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
-         .replace(/\*([^*\n]+)\*/g, '<i>$1</i>')
-         .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img class="md-img" src="$2" alt="$1" loading="lazy">')
-         .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-    var lineas = t.split('\n'), out = [], par = [];
+    /* markdown ligero: **b** *i* # h ## h ### h - lista > cita --- línea !img[]() [txt](url)
+       + pase directo de HTML: líneas que empiezan con '<' van sin escapar */
+    function inl(l) {
+      return esc(l)
+        .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+        .replace(/\*([^*\n]+)\*/g, '<i>$1</i>')
+        .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img class="md-img" src="$2" alt="$1" loading="lazy">')
+        .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    }
+    var lineas = String(txt || '').split('\n'), out = [], par = [];
     function flush() { if (par.length) { out.push('<p>' + par.join('<br>') + '</p>'); par = []; } }
     var i = 0;
     while (i < lineas.length) {
       var l = lineas[i];
       if (!l.trim()) { flush(); i++; continue; }
+      if (/^\s*</.test(l)) {
+        flush();
+        var hb = [];
+        while (i < lineas.length && (!lineas[i].trim() || /^\s*</.test(lineas[i]))) { if (lineas[i].trim()) hb.push(lineas[i]); i++; }
+        out.push(hb.join('\n'));
+        continue;
+      }
       if (/^#{1,3}\s/.test(l)) {
         flush();
         var n = l.match(/^#+/)[0].length;
-        out.push('<h' + (n + 1) + ' class="md-h">' + l.replace(/^#+\s*/, '') + '</h' + (n + 1) + '>');
+        out.push('<h' + (n + 1) + ' class="md-h">' + inl(l.replace(/^#+\s*/, '')) + '</h' + (n + 1) + '>');
         i++; continue;
       }
       if (/^---+$/.test(l.trim())) { flush(); out.push('<hr class="md-hr">'); i++; continue; }
       if (/^\s*-\s+/.test(l)) {
         flush();
         var ul = [];
-        while (i < lineas.length && /^\s*-\s+/.test(lineas[i])) { ul.push('<li>' + lineas[i].replace(/^\s*-\s+/, '') + '</li>'); i++; }
+        while (i < lineas.length && /^\s*-\s+/.test(lineas[i])) { ul.push('<li>' + inl(lineas[i].replace(/^\s*-\s+/, '')) + '</li>'); i++; }
         out.push('<ul>' + ul.join('') + '</ul>');
         continue;
       }
-      if (/^\s*(&gt;|>)\s?/.test(l)) {
+      if (/^\s*>\s?/.test(l)) {
         flush();
         var bq = [];
-        while (i < lineas.length && /^\s*(&gt;|>)\s?/.test(lineas[i])) { bq.push(lineas[i].replace(/^\s*(&gt;|>)\s?/, '')); i++; }
+        while (i < lineas.length && /^\s*>\s?/.test(lineas[i])) { bq.push(inl(lineas[i].replace(/^\s*>\s?/, ''))); i++; }
         out.push('<blockquote>' + bq.join('<br>') + '</blockquote>');
         continue;
       }
@@ -89,12 +99,12 @@
           var celdas = f.replace(/^\s*\||\|\s*$/g, '').split('|');
           if (/^[\s\-:]+$/.test(celdas.join(''))) return;
           var tag = ix === 0 ? 'th' : 'td';
-          tab += '<tr>' + celdas.map(function (c) { return '<' + tag + '>' + c.trim() + '</' + tag + '>'; }).join('') + '</tr>';
+          tab += '<tr>' + celdas.map(function (c) { return '<' + tag + '>' + inl(c.trim()) + '</' + tag + '>'; }).join('') + '</tr>';
         });
         out.push(tab + '</tbody></table>');
         continue;
       }
-      par.push(l); i++;
+      par.push(inl(l)); i++;
     }
     flush();
     return '<div class="md">' + out.join('') + '</div>';

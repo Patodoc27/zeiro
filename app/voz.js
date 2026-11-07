@@ -131,7 +131,76 @@
     '<span class="edsep"></span>' +
     '<button type="button" class="edbtn" data-fmt="img" title="Imagen">IMG</button>' +
     '<button type="button" class="edbtn" data-fmt="link" title="Enlace">' + ZI('link') + '</button>' +
+    '<button type="button" class="edbtn" data-fmt="html" title="Insertar bloque HTML">&lt;/&gt;</button>' +
+    '<span class="edsep"></span>' +
+    '<button type="button" class="edbtn edmode on" data-mode="design" title="Edición visual">Diseño</button>' +
+    '<button type="button" class="edbtn edmode" data-mode="code" title="Ver/editar HTML">&lt;HTML&gt;</button>' +
     '</div>';
+
+  /* ---- modo Diseño: contenteditable con execCommand ---- */
+  function richSync(re) {
+    var wr = re.closest('.vozwrap');
+    var ta = wr ? wr.querySelector('textarea') : null;
+    if (ta) { ta.value = re.innerHTML; }
+  }
+  function richCmd(re, fmt) {
+    re.focus();
+    var D = document;
+    if (fmt === 'b') D.execCommand('bold');
+    else if (fmt === 'i') D.execCommand('italic');
+    else if (fmt === 'h2') D.execCommand('formatBlock', false, 'h2');
+    else if (fmt === 'h3') D.execCommand('formatBlock', false, 'h3');
+    else if (fmt === 'ul') D.execCommand('insertUnorderedList');
+    else if (fmt === 'quote') D.execCommand('formatBlock', false, 'blockquote');
+    else if (fmt === 'hr') D.execCommand('insertHorizontalRule');
+    else if (fmt === 'table') D.execCommand('insertHTML', false, '<table class="md-tab"><tbody><tr><th>Columna 1</th><th>Columna 2</th><th>Columna 3</th></tr><tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table><p>&nbsp;</p>');
+    else if (fmt === 'link') {
+      var u = prompt('URL del enlace:', 'https://');
+      if (u) D.execCommand('createLink', false, u);
+    }
+    else if (fmt === 'html') {
+      var h = prompt('Pegá el HTML a insertar:');
+      if (h) D.execCommand('insertHTML', false, h + '<p>&nbsp;</p>');
+    }
+    else if (fmt === 'img') {
+      var inp = D.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*';
+      inp.onchange = function () {
+        var f = inp.files[0];
+        if (!f) return;
+        if (f.size > 1500000) {
+          var u2 = prompt('Imagen grande: pegá la URL de la imagen:', 'https://');
+          if (u2) D.execCommand('insertImage', false, u2);
+          return;
+        }
+        var r = new FileReader();
+        r.onload = function () { re.focus(); D.execCommand('insertImage', false, r.result); richSync(re); };
+        r.readAsDataURL(f);
+      };
+      inp.click();
+      return;
+    }
+    richSync(re);
+  }
+  function richFill(wr) {
+    var re = wr.querySelector('.riched');
+    var ta = wr.querySelector('textarea');
+    if (!re || !ta || re.getAttribute('data-ready') === '1') return;
+    var html = (window.Z && Z.md) ? Z.md(ta.value || '') : (ta.value || '');
+    html = html.replace(/^<div class="md">/, '').replace(/<\/div>$/, '');
+    re.innerHTML = html || '<p><br></p>';
+    re.setAttribute('data-ready', '1');
+  }
+  function setMode(wr, modo) {
+    var re = wr.querySelector('.riched');
+    var ta = wr.querySelector('textarea');
+    if (!re || !ta) return;
+    if (modo === 'design') richFill(wr);
+    else if (re.getAttribute('data-ready') === '1') { ta.value = re.innerHTML; }
+    wr.setAttribute('data-modo', modo);
+    wr.querySelectorAll('.edmode').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-mode') === modo); });
+    (modo === 'design' ? re : ta).focus();
+  }
 
   /* API: Z.voz.readBtn(selector) · Z.voz.wrap(htmlDelTextarea) */
   window.Z = window.Z || {};
@@ -141,11 +210,29 @@
       return '<button type="button" class="vozread" data-read="' + sel + '" title="Escuchar en voz alta">' + ZI('speaker') + '</button>';
     },
     wrap: function (html) {
-      return '<div class="vozwrap">' + EDBAR + html +
+      return '<div class="vozwrap" data-modo="design">' + EDBAR +
+        '<div class="riched" contenteditable="true" spellcheck="true"></div>' + html +
         (SR ? '<button type="button" class="vozmic" title="Dictar por voz">' + ZI('mic') + '</button>' : '') +
         '</div>';
     }
   };
+
+  /* poblar .riched cuando aparece un editor nuevo en pantalla */
+  var mo = new MutationObserver(function (muts) {
+    muts.forEach(function (m) {
+      m.addedNodes && Array.prototype.forEach.call(m.addedNodes, function (n) {
+        if (!n || !n.querySelectorAll) return;
+        var wraps = n.classList && n.classList.contains('vozwrap') ? [n] : n.querySelectorAll('.vozwrap');
+        Array.prototype.forEach.call(wraps, function (w) { if (w.getAttribute('data-modo') !== 'code') richFill(w); });
+      });
+    });
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
+
+  /* mantener el textarea siempre sincronizado (los guardados leen el textarea) */
+  document.addEventListener('input', function (e) {
+    if (e.target && e.target.classList && e.target.classList.contains('riched')) richSync(e.target);
+  });
 
   document.addEventListener('click', function (e) {
     var rb = e.target.closest ? e.target.closest('.vozread') : null;
@@ -159,15 +246,33 @@
     var mb = e.target.closest ? e.target.closest('.vozmic') : null;
     if (mb) {
       var w = mb.parentNode;
+      var re = w ? w.querySelector('.riched') : null;
       var ta = w ? w.querySelector('textarea,input[type=text]') : null;
-      if (ta) dictar(ta, mb);
+      if (w && w.getAttribute('data-modo') === 'design' && re) {
+        if (!SR) { if (window.Z && Z.toast) Z.toast('El dictado por voz funciona en Chrome/Edge', 'mal'); return; }
+        re.focus();
+        dictar({ get value() { return ''; }, set value(v) { document.execCommand('insertText', false, v); },
+          dispatchEvent: function () { richSync(re); } }, mb);
+      } else if (ta) dictar(ta, mb);
+      return;
+    }
+    var mt = e.target.closest ? e.target.closest('.edmode') : null;
+    if (mt) {
+      var wr0 = mt.closest('.vozwrap');
+      if (wr0) setMode(wr0, mt.getAttribute('data-mode'));
       return;
     }
     var eb = e.target.closest ? e.target.closest('.edbtn') : null;
     if (eb) {
       var wr = eb.closest('.vozwrap');
-      var ta2 = wr ? wr.querySelector('textarea,input[type=text]') : null;
-      if (ta2) edAccion(ta2, eb.getAttribute('data-fmt'), eb);
+      if (!wr) return;
+      var re2 = wr.querySelector('.riched');
+      var ta2 = wr.querySelector('textarea,input[type=text]');
+      if (wr.getAttribute('data-modo') === 'design' && re2) richCmd(re2, eb.getAttribute('data-fmt'));
+      else if (ta2) {
+        if (eb.getAttribute('data-fmt') === 'html') insEnCursor(ta2, '\n<div>\n', '\n</div>\n', 'tu HTML acá');
+        else edAccion(ta2, eb.getAttribute('data-fmt'), eb);
+      }
     }
   });
 })();

@@ -574,6 +574,20 @@ main>div,main>.topbar,main>.card{animation:aparecer .3s ease}
   display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
 .edbtn:hover{background:var(--vio-50);border-color:var(--vio-500);color:var(--vio-500);transform:translateY(-1px)}
 .edbtn .ic{width:14px;height:14px}
+.edbtn.edmode{font-size:10.5px;font-weight:800;letter-spacing:.3px;color:var(--neg-500)}
+.edbtn.edmode.on{background:linear-gradient(135deg,var(--vio-700),var(--vio-600));color:#fff;border-color:var(--vio-700)}
+.vozwrap[data-modo=design] textarea{display:none}
+.vozwrap[data-modo=code] .riched{display:none}
+.riched{min-height:150px;max-height:52vh;overflow-y:auto;background:#fff;border:1.5px solid var(--linea);
+  border-radius:var(--radio-s);padding:13px 16px;font:14.5px/1.65 var(--fuente);color:var(--neg-900);outline:none}
+.riched:focus{border-color:var(--vio-500);box-shadow:0 0 0 3px var(--vio-100)}
+.riched h2,.riched h3{color:var(--vio-700);margin:.6em 0 .3em}
+.riched blockquote{border-left:4px solid var(--tur-500);margin:8px 0;padding:6px 14px;background:var(--tur-50);border-radius:0 10px 10px 0;color:var(--neg-700)}
+.riched table{border-collapse:collapse;width:100%;margin:8px 0}
+.riched th{background:linear-gradient(135deg,var(--vio-700),var(--vio-500));color:#fff;padding:8px 12px;text-align:left}
+.riched td{border:1px solid var(--linea);padding:7px 12px}
+.riched img{max-width:100%;border-radius:10px}
+.riched hr{border:none;border-top:2px dashed var(--linea);margin:14px 0}
 .edsep{width:1px;height:18px;background:var(--neg-150);margin:0 3px}
 .md-tab{width:100%;border-collapse:collapse;margin:14px 0;border-radius:12px;overflow:hidden;
   box-shadow:0 1px 3px rgba(20,20,31,.08)}
