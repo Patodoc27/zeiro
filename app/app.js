@@ -115,7 +115,7 @@
       '<div class="loginwrap"><div class="logincard">' +
       '<div class="loginlat"><img src="assets/logo-zeiro.png" alt="Zeiro" style="width:200px;display:block;margin-bottom:10px">' +
       '<h1 style="display:none">Zeiro</h1><p>' + esc(CONFIG.TAGLINE) + '. Materiales, tareas, cuestionarios y notas — simple para docentes y estudiantes.</p>' +
-      '<div class="rayas"></div>' + Z_ZEBRA('saludo') + '</div>' +
+      '<div class="rayas"></div>' + '</div>' +
       '<div class="loginform"><h2 style="margin-bottom:4px">Ingresar</h2>' +
       (demo
         ? '<p style="color:var(--neg-300);font-size:13px;margin-top:4px">Modo demostración — elegí un rol para recorrer la plataforma:</p>' +
