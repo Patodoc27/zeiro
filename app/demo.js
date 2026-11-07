@@ -20,15 +20,15 @@ window.Z_DEMO_SEED = {
     { id: 'c-bio', name: 'Biología · 5° 1°', short_name: 'BIO 5-1', color: '#14B8A6',
       pattern: 'puntos', sigla: 'BIO', layout: 'solapas', banner_url: 'assets/img/celula.svg', welcome: '¡Hola! Acá van a encontrar los materiales, tareas y el foro de dudas de Biología.',
       description: 'Seres vivos, organización celular, biomoléculas y metabolismo.', school_year: '2026',
-      teacher_id: 'u-bio', active: true, created_at: '2026-02-20T10:00:00Z' },
+      enroll_code: 'BIO-2026', teacher_id: 'u-bio', active: true, created_at: '2026-02-20T10:00:00Z' },
     { id: 'c-mat', name: 'Matemática · 3° 2°', short_name: 'MAT 3-2', color: '#2563EB',
       pattern: 'ondas', sigla: 'MAT', banner_url: 'assets/img/funcion.svg', welcome: 'Repasen la guía antes del cuestionario. ¡Éxitos!',
       description: 'Funciones, ecuaciones y geometría analítica.', school_year: '2026',
-      teacher_id: 'u-mat', active: true, created_at: '2026-02-20T10:00:00Z' },
+      enroll_code: 'MAT-2026', teacher_id: 'u-mat', active: true, created_at: '2026-02-20T10:00:00Z' },
     { id: 'c-his', name: 'Historia · 4° 1°', short_name: 'HIS 4-1', color: '#7C3AED', banner_url: 'assets/img/historia.svg',
       pattern: 'rayas', sigla: 'HIS', welcome: 'Lean la guía antes del debate. Acá está todo el siglo XIX organizado.',
       description: 'Argentina y mundo, siglos XIX y XX.', school_year: '2026',
-      teacher_id: 'u-his', active: true, created_at: '2026-02-20T10:00:00Z' }
+      enroll_code: 'HIS-2026', teacher_id: 'u-his', active: true, created_at: '2026-02-20T10:00:00Z' }
   ],
   enrollments: [
     { id: 'en1', course_id: 'c-bio', student_id: 'u-e1' }, { id: 'en2', course_id: 'c-bio', student_id: 'u-e2' },
@@ -102,7 +102,11 @@ window.Z_DEMO_SEED = {
                  intro: 'Identificá pendiente y ordenada. 3 intentos; se queda el mejor.' }, created_at: '2026-03-06T11:00:00Z' },
     { id: 'm-m3', course_id: 'c-mat', section_id: 's-m1', type: 'forum', position: 4, visible: true, due_date: null,
       title: 'Foro · Ayudas de funciones',
-      content: { description: 'Dejen sus dudas de las gráficas y ayúdense entre todos.' }, created_at: '2026-03-06T12:00:00Z' }
+      content: { description: 'Dejen sus dudas de las gráficas y ayúdense entre todos.' }, created_at: '2026-03-06T12:00:00Z' },
+    { id: 'm-b9', course_id: 'c-bio', section_id: 's-b1', type: 'poll', position: 4, visible: true, due_date: null,
+      title: 'Encuesta · ¿Qué repasamos antes del examen?',
+      content: { etiqueta: 'Votación', etiqueta_color: '#7C3AED', pregunta: '¿Qué tema preferís repasar en la próxima clase?',
+        opciones: ['Orgánulos de la célula', 'Biomoléculas: agua, carbohidratos y lípidos', 'La vicuña y la puna'] } }
   ],
   questions: [
     { id: 'qm1', module_id: 'm-m4', type: 'mcq', position: 1, points: 3,
@@ -195,6 +199,40 @@ window.Z_DEMO_SEED = {
       prompt: '¿Cómo se llama la molécula que transporta energía en la célula?',
       payload: { accepted: ['ATP', 'adenosín trifosfato', 'adenosin trifosfato'], case_sensitive: false }, created_at: '2026-03-01T10:10:00Z' }
   ],
+  messages: [
+    { id: 'ms1', from_id: 'u-e1', to_id: 'u-bio', body: 'Profe, ¿el esquema de la célula lo tengo que hacer a mano o puede ser digital?', created_at: '2026-11-04T18:20:00Z', read_at: '2026-11-04T18:35:00Z' },
+    { id: 'ms2', from_id: 'u-bio', to_id: 'u-e1', body: '¡Puede ser digital! Subilo en el formato que prefieras. Fijate que sea legible.', created_at: '2026-11-04T18:35:00Z', read_at: '2026-11-04T19:00:00Z' },
+    { id: 'ms3', from_id: 'u-bio', to_id: 'u-e1', body: 'Muy buena tu participación en el foro, seguí así.', created_at: '2026-11-05T10:00:00Z', read_at: null }
+  ],
+  poll_votes: [
+    { id: 'pv1', module_id: 'm-b9', student_id: 'u-e2', option: 0, created_at: '2026-11-03T15:00:00Z' },
+    { id: 'pv2', module_id: 'm-b9', student_id: 'u-e3', option: 0, created_at: '2026-11-03T16:10:00Z' },
+    { id: 'pv3', module_id: 'm-b9', student_id: 'u-e4', option: 1, created_at: '2026-11-04T09:00:00Z' },
+    { id: 'pv4', module_id: 'm-b9', student_id: 'u-e5', option: 2, created_at: '2026-11-04T09:30:00Z' },
+    { id: 'pv5', module_id: 'm-b9', student_id: 'u-e6', option: 0, created_at: '2026-11-04T11:00:00Z' },
+    { id: 'pv6', module_id: 'm-b9', student_id: 'u-e7', option: 1, created_at: '2026-11-05T08:00:00Z' }
+  ],
+  xp_log: [
+    { id: 'xp1', student_id: 'u-e1', pts: 20, motivo: 'Cuestionario aprobado', created_at: '2026-11-03T15:00:00Z' },
+    { id: 'xp2', student_id: 'u-e1', pts: 15, motivo: 'Tarea entregada', created_at: '2026-11-04T10:00:00Z' },
+    { id: 'xp3', student_id: 'u-e1', pts: 5, motivo: 'Participaste en el foro', created_at: '2026-11-04T12:00:00Z' },
+    { id: 'xp4', student_id: 'u-e2', pts: 20, motivo: 'Cuestionario aprobado', created_at: '2026-11-03T15:30:00Z' },
+    { id: 'xp5', student_id: 'u-e2', pts: 10, motivo: 'Puntaje perfecto', created_at: '2026-11-03T15:30:00Z' },
+    { id: 'xp6', student_id: 'u-e3', pts: 15, motivo: 'Tarea entregada', created_at: '2026-11-04T09:00:00Z' },
+    { id: 'xp7', student_id: 'u-e5', pts: 5, motivo: 'Participaste en el foro', created_at: '2026-11-05T08:00:00Z' },
+    { id: 'xp8', student_id: 'u-e6', pts: 20, motivo: 'Cuestionario aprobado', created_at: '2026-11-02T14:00:00Z' }
+  ],
+  flashcards: [
+    { id: 'fc1', course_id: 'c-bio', created_by: 'u-bio', front: '¿Qué es la puna?', back: 'Altiplano andino entre 3.500 y 4.800 msnm: pastizal seco, gran amplitud térmica y alta radiación UV.' },
+    { id: 'fc2', course_id: 'c-bio', created_by: 'u-bio', front: '¿Por qué es especial la fibra de vicuña?', back: 'Es la fibra animal más fina del mundo (12-14 micrones): atrapa aire y aísla del frío extremo.' },
+    { id: 'fc3', course_id: 'c-bio', created_by: 'u-bio', front: '¿Qué función cumplen los ribosomas?', back: 'Fabrican proteínas leyendo el ARN mensajero: la "fábrica" de la célula.' },
+    { id: 'fc4', course_id: 'c-bio', created_by: 'u-bio', front: '¿Diferencia entre célula animal y vegetal?', back: 'La vegetal tiene pared celular, cloroplastos y una vacuola central grande; la animal no.' },
+    { id: 'fc5', course_id: 'c-bio', created_by: 'u-bio', front: '¿Qué es el chaku?', back: 'Práctica de esquila comunitaria de vicuñas: se las arrea, se corta la fibra y se liberan vivas.' }
+  ],
+  flash_reviews: [
+    { id: 'fr1', card_id: 'fc1', student_id: 'u-e1', box: 2, due: '2026-11-06', last: '2026-11-03T15:00:00Z' }
+  ],
+  certificates: [],
   attendance: [
     { id: 'at1', course_id: 'c-bio', student_id: 'u-e1', date: '2026-11-03', status: 'P', marked_by: 'u-bio' },
     { id: 'at2', course_id: 'c-bio', student_id: 'u-e2', date: '2026-11-03', status: 'P', marked_by: 'u-bio' },

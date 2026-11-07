@@ -1,8 +1,8 @@
-var CACHE = 'zeiro-v2';
+var CACHE = 'zeiro-v3';
 var SHELL = [
   './', './index.html', './theme.css', './manifest.webmanifest',
   './app/config.js', './app/icons.js', './app/demo.js', './app/api.js',
-  './app/quiz.js', './app/views.js', './app/app.js'
+  './app/quiz.js', './app/voz.js', './app/views.js', './app/app.js', './app/extra.js'
 ];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

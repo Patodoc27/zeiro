@@ -17,7 +17,7 @@
     try { d = JSON.parse(localStorage.getItem(LS)); } catch (e) { d = null; }
     if (!d || !d.meta) { d = clone(window.Z_DEMO_SEED); save(d); }
     // tablas agregadas en v2: garantizar que existan en stores viejos
-    ['forum_posts', 'bank', 'attendance'].forEach(function (t) {
+    ['forum_posts', 'bank', 'attendance', 'messages', 'poll_votes', 'xp_log', 'flashcards', 'flash_reviews', 'certificates'].forEach(function (t) {
       if (!d[t]) { d[t] = clone(window.Z_DEMO_SEED[t] || []); save(d); }
     });
     return d;
@@ -39,6 +39,10 @@
     });
   }
 
+  /* XP: puntos por acción del estudiante (demo) */
+  function addXp(d, studentId, pts, motivo) {
+    d.xp_log.push({ id: 'xp' + Date.now() + Math.floor(Math.random() * 999), student_id: studentId, pts: pts, motivo: motivo, created_at: now() });
+  }
   /* Corrección automática de un intento (compartida por demo y supabase). */
   function gradeAnswers(questions, answers) {
     var score = 0, max = 0, review = false;
@@ -384,6 +388,11 @@
           status: g.needs_review ? 'submitted' : 'graded'
         };
         d.quiz_attempts.push(a);
+        var mx2 = (m.content && m.content.max_grade) || 10;
+        var pnota = g.max ? g.score / g.max * mx2 : 0;
+        var pass = (m.content && m.content.pass_grade) || 6;
+        if (g.max && pnota >= pass) addXp(d, me.id, 20, 'Cuestionario aprobado');
+        if (g.max && g.score === g.max) addXp(d, me.id, 10, 'Puntaje perfecto');
         // grade al libro (cuenta el mejor intento)
         var nota = g.max ? Math.round(g.score * maxG / g.max * 10) / 10 : 0;
         var better = d.grades.filter(function (gr) {
@@ -476,6 +485,7 @@
         s.embed = data.embed || null;
         s.files = data.files || [];
         s.submitted_at = now();
+        addXp(d, me.id, 15, 'Tarea entregada');
         save(d); return Promise.resolve(clone(s));
       }
       return supa().from('submissions').upsert({
@@ -604,13 +614,13 @@
         var d = load();
         var row = c.id ? find(d, 'courses', c.id) : null;
         if (!row) { row = { id: uid(d, 'c'), active: true, created_at: now() }; d.courses.push(row); }
-        ['name', 'short_name', 'color', 'description', 'school_year', 'teacher_id', 'active', 'pattern', 'welcome', 'sigla', 'banner_url', 'layout'].forEach(function (k) {
+        ['name', 'short_name', 'color', 'description', 'school_year', 'teacher_id', 'active', 'pattern', 'welcome', 'sigla', 'banner_url', 'layout', 'enroll_code'].forEach(function (k) {
           if (c[k] !== undefined) row[k] = c[k];
         });
         save(d); return Promise.resolve(clone(row));
       }
       var r2 = {};
-      ['id', 'name', 'short_name', 'color', 'description', 'school_year', 'teacher_id', 'active', 'pattern', 'welcome', 'sigla', 'banner_url', 'layout'].forEach(function (k) {
+      ['id', 'name', 'short_name', 'color', 'description', 'school_year', 'teacher_id', 'active', 'pattern', 'welcome', 'sigla', 'banner_url', 'layout', 'enroll_code'].forEach(function (k) {
         if (c[k] !== undefined) r2[k] = c[k];
       });
       return supa().from('courses').upsert(r2).select().single().then(function (r) { return r.data; });
@@ -680,7 +690,8 @@
         var d = load();
         var row = { id: uid(d, 'fp'), module_id: moduleId, parent_id: post.parent_id || null,
           author_id: me.id, title: post.title || null, body: post.body, created_at: now() };
-        d.forum_posts.push(row); save(d); return Promise.resolve(clone(row));
+        d.forum_posts.push(row); addXp(d, me.id, 5, 'Participaste en el foro');
+        save(d); return Promise.resolve(clone(row));
       }
       return supa().from('forum_posts').insert({
         module_id: moduleId, parent_id: post.parent_id || null,
@@ -868,9 +879,263 @@
         save(d); return Promise.resolve();
       }
       return Promise.reject(new Error('Borrar usuarios reales: Supabase → Authentication'));
-    }
+    },
+    /* ---------- XP, niveles, racha, leaderboard ---------- */
+    grantXp: function (pts, motivo) {
+      if (!useDemo || !me) return Promise.resolve();
+      var d = load(); addXp(d, me.id, pts, motivo); save(d); return Promise.resolve();
+    },
+    myXp: function () {
+      if (!useDemo) return Promise.resolve({ total: 0, level: 1, next: 100, streak: 0, recent: [] });
+      var d = load();
+      var mios = d.xp_log.filter(function (x) { return x.student_id === me.id; });
+      var total = mios.reduce(function (t, x) { return t + x.pts; }, 0);
+      var level = 1, acum = 0, NEXT = [50, 150, 300, 500, 800, 1200, 1700, 2300, 3000];
+      for (var i = 0; i < NEXT.length; i++) { if (total >= NEXT[i]) { level = i + 2; acum = NEXT[i]; } else break; }
+      var next = NEXT[level - 1] || (acum + 1000);
+      var dias = {};
+      mios.forEach(function (x) { dias[x.created_at.slice(0, 10)] = 1; });
+      var streak = 0, day = new Date();
+      if (!dias[day.toISOString().slice(0, 10)]) day.setDate(day.getDate() - 1);
+      while (dias[day.toISOString().slice(0, 10)]) { streak++; day.setDate(day.getDate() - 1); }
+      return Promise.resolve({ total: total, level: level, acum: acum, next: next, streak: streak,
+        recent: mios.slice(-6).reverse() });
+    },
+    leaderboard: function () {
+      if (!useDemo) return Promise.resolve([]);
+      var d = load();
+      var tot = {};
+      d.xp_log.forEach(function (x) { tot[x.student_id] = (tot[x.student_id] || 0) + x.pts; });
+      return Promise.resolve(Object.keys(tot).map(function (uid) {
+        var p = find(d, 'profiles', uid);
+        return { id: uid, name: p ? p.full_name : '?', pts: tot[uid] };
+      }).sort(function (a, b) { return b.pts - a.pts; }).slice(0, 20));
+    },
+
+    /* ---------- mensajería 1-a-1 ---------- */
+    threads: function () {
+      if (!useDemo) return Promise.resolve([]);
+      var d = load();
+      var otros = {};
+      d.messages.forEach(function (m) {
+        if (m.from_id !== me.id && m.to_id !== me.id) return;
+        var o = m.from_id === me.id ? m.to_id : m.from_id;
+        if (!otros[o]) otros[o] = { uid: o, last: m, unread: 0 };
+        if (m.created_at > otros[o].last.created_at) otros[o].last = m;
+        if (m.to_id === me.id && !m.read_at) otros[o].unread++;
+      });
+      return Promise.resolve(Object.keys(otros).map(function (k) {
+        var t = otros[k]; var p = find(d, 'profiles', t.uid);
+        return { uid: k, name: p ? p.full_name : '?', role: p ? p.role : '',
+          last_body: t.last.body, last_at: t.last.created_at, mio: t.last.from_id === me.id, unread: t.unread };
+      }).sort(function (a, b) { return a.last_at < b.last_at ? 1 : -1; }));
+    },
+    threadWith: function (uid) {
+      if (!useDemo) return Promise.resolve([]);
+      var d = load();
+      var leer = false;
+      d.messages.forEach(function (m) {
+        if (m.to_id === me.id && m.from_id === uid && !m.read_at) { m.read_at = now(); leer = true; }
+      });
+      if (leer) save(d);
+      return Promise.resolve(d.messages.filter(function (m) {
+        return (m.from_id === me.id && m.to_id === uid) || (m.from_id === uid && m.to_id === me.id);
+      }).sort(function (a, b) { return a.created_at < b.created_at ? -1 : 1; }).map(clone));
+    },
+    sendMessage: function (toId, body) {
+      if (!useDemo) return Promise.resolve();
+      var d = load();
+      d.messages.push({ id: uid(d, 'ms'), from_id: me.id, to_id: toId, body: body, created_at: now(), read_at: null });
+      save(d); return Promise.resolve();
+    },
+    unreadMsgs: function () {
+      if (!useDemo) return Promise.resolve(0);
+      var d = load();
+      return Promise.resolve(d.messages.filter(function (m) { return m.to_id === me.id && !m.read_at; }).length);
+    },
+
+    /* ---------- encuestas (módulo poll) ---------- */
+    pollVote: function (moduleId, ix) {
+      if (!useDemo) return Promise.resolve();
+      var d = load();
+      var v = d.poll_votes.filter(function (x) { return x.module_id === moduleId && x.student_id === me.id; })[0];
+      if (v) v.option = ix;
+      else d.poll_votes.push({ id: uid(d, 'pv'), module_id: moduleId, student_id: me.id, option: ix, created_at: now() });
+      addXp(d, me.id, 3, 'Votaste en la encuesta');
+      save(d); return Promise.resolve();
+    },
+    pollResults: function (moduleId) {
+      if (!useDemo) return Promise.resolve({ votes: {}, mine: null, total: 0 });
+      var d = load();
+      var votes = {}, mine = null, total = 0;
+      d.poll_votes.forEach(function (x) {
+        if (x.module_id !== moduleId) return;
+        votes[x.option] = (votes[x.option] || 0) + 1; total++;
+        if (x.student_id === me.id) mine = x.option;
+      });
+      return Promise.resolve({ votes: votes, mine: mine, total: total });
+    },
+
+    /* ---------- flashcards ---------- */
+    flashCards: function (courseId) {
+      if (!useDemo) return Promise.resolve([]);
+      var d = load();
+      return Promise.resolve(clone(d.flashcards.filter(function (c) { return c.course_id === courseId; })));
+    },
+    flashSave: function (courseId, card) {
+      if (!useDemo) return Promise.resolve();
+      var d = load();
+      var row = card.id ? find(d, 'flashcards', card.id) : null;
+      if (!row) { row = { id: uid(d, 'fc'), course_id: courseId, created_by: me.id }; d.flashcards.push(row); }
+      row.front = card.front; row.back = card.back;
+      save(d); return Promise.resolve(clone(row));
+    },
+    flashDelete: function (id) {
+      if (!useDemo) return Promise.resolve();
+      var d = load();
+      d.flashcards = d.flashcards.filter(function (c) { return c.id !== id; });
+      d.flash_reviews = d.flash_reviews.filter(function (r) { return r.card_id !== id; });
+      save(d); return Promise.resolve();
+    },
+    myDueFlash: function (courseId) {
+      // devuelve cartas del curso con su estado: debidas primero, luego nuevas
+      if (!useDemo) return Promise.resolve([]);
+      var d = load();
+      var hoy = new Date().toISOString().slice(0, 10);
+      return Promise.resolve(d.flashcards.filter(function (c) { return c.course_id === courseId; }).map(function (c) {
+        var r = d.flash_reviews.filter(function (x) { return x.card_id === c.id && x.student_id === me.id; })[0];
+        return clone({ card: c, box: r ? r.box : 0, due: r ? r.due : null, pendiente: !r || r.due <= hoy });
+      }));
+    },
+    flashReview: function (cardId, ok) {
+      if (!useDemo) return Promise.resolve();
+      var d = load();
+      var r = d.flash_reviews.filter(function (x) { return x.card_id === cardId && x.student_id === me.id; })[0];
+      var INT = [0, 1, 3, 7, 15, 30, 60];
+      if (!r) { r = { id: uid(d, 'fr'), card_id: cardId, student_id: me.id, box: 0 }; d.flash_reviews.push(r); }
+      r.box = ok ? Math.min(r.box + 1, INT.length - 1) : 0;
+      var dd = new Date(); dd.setDate(dd.getDate() + INT[r.box]);
+      r.due = dd.toISOString().slice(0, 10); r.last = now();
+      addXp(d, me.id, 2, 'Repasaste flashcards');
+      save(d); return Promise.resolve();
+    },
+
+    /* ---------- certificados ---------- */
+    issueCert: function (courseId, studentId) {
+      if (!useDemo) return Promise.resolve();
+      var d = load();
+      var ex = d.certificates.filter(function (c) { return c.course_id === courseId && c.student_id === studentId; })[0];
+      if (ex) return Promise.resolve(clone(ex));
+      var code = 'ZEI-' + Math.random().toString(36).slice(2, 8).toUpperCase();
+      var c = { id: uid(d, 'ct'), course_id: courseId, student_id: studentId, code: code, issued_at: now(), issued_by: me.id };
+      d.certificates.push(c); save(d); return Promise.resolve(clone(c));
+    },
+    myCerts: function () {
+      if (!useDemo) return Promise.resolve([]);
+      var d = load();
+      return Promise.resolve(d.certificates.filter(function (c) { return c.student_id === me.id; }).map(function (c) {
+        c = clone(c); var co = find(d, 'courses', c.course_id);
+        c.course_name = co ? co.name : '?'; c.course_color = co ? co.color : '#7C3AED';
+        return c;
+      }));
+    },
+    certByCode: function (code) {
+      if (!useDemo) return Promise.resolve(null);
+      var d = load();
+      var c = d.certificates.filter(function (x) { return x.code === code; })[0];
+      if (!c) return Promise.resolve(null);
+      c = clone(c);
+      var co = find(d, 'courses', c.course_id), st = find(d, 'profiles', c.student_id), te = co ? find(d, 'profiles', co.teacher_id) : null;
+      c.course_name = co ? co.name : '?'; c.course_color = co ? co.color : '#7C3AED';
+      c.student_name = st ? st.full_name : '?'; c.teacher_name = te ? te.full_name : '';
+      return Promise.resolve(c);
+    },
+
+    /* ---------- inscripción por código ---------- */
+    joinByCode: function (code) {
+      if (!useDemo) return Promise.resolve({ error: 'demo' });
+      var d = load();
+      code = (code || '').trim().toUpperCase();
+      var c = d.courses.filter(function (x) { return (x.enroll_code || '').toUpperCase() === code; })[0];
+      if (!c) return Promise.resolve({ error: 'Código no encontrado' });
+      if (d.enrollments.some(function (e) { return e.course_id === c.id && e.student_id === me.id; }))
+        return Promise.resolve({ error: 'Ya estás inscripto en ese curso', course: c });
+      d.enrollments.push({ id: uid(d, 'en'), course_id: c.id, student_id: me.id });
+      save(d); return Promise.resolve({ course: c });
+    },
+
+    /* ---------- progreso (docente) ---------- */
+    courseProgress: function (courseId) {
+      if (!useDemo) return Promise.resolve([]);
+      var d = load();
+      var mods = d.modules.filter(function (m) { return m.course_id === courseId && m.visible; });
+      var gradables = mods.filter(function (m) { return m.type === 'quiz' || m.type === 'assignment'; });
+      return Promise.resolve(d.enrollments.filter(function (e) { return e.course_id === courseId; }).map(function (e) {
+        var st = find(d, 'profiles', e.student_id);
+        var vistos = d.module_views.filter(function (v) { return v.student_id === e.student_id && mods.some(function (m) { return m.id === v.module_id; }); }).length;
+        var hechos = gradables.filter(function (m) {
+          return d.submissions.some(function (s) { return s.module_id === m.id && s.student_id === e.student_id; }) ||
+                 d.quiz_attempts.some(function (a) { return a.module_id === m.id && a.student_id === e.student_id && a.status !== 'open'; });
+        }).length;
+        var notas = d.grades.filter(function (g) { return g.course_id === courseId && g.student_id === e.student_id && g.grade != null; });
+        var prom = notas.length ? Math.round(notas.reduce(function (t, g) { return t + g.grade / Math.max(1, g.max_grade) * 10; }, 0) / notas.length * 10) / 10 : null;
+        var cert = d.certificates.filter(function (c) { return c.course_id === courseId && c.student_id === e.student_id; })[0];
+        return { student: clone(st), vistos: vistos, total: mods.length, hechos: hechos, gradables: gradables.length, prom: prom, cert: cert || null };
+      }));
+    },
+
+    /* ---------- estadísticas (dirección) ---------- */
+    stats: function () {
+      if (!useDemo) return Promise.resolve(null);
+      var d = load();
+      var por = { estudiante: 0, docente: 0, admin: 0 };
+      d.profiles.forEach(function (p) { por[p.role] = (por[p.role] || 0) + 1; });
+      var hace30 = new Date(); hace30.setDate(hace30.getDate() - 30);
+      var act = {};
+      var marcar = function (iso) { var k = (iso || '').slice(0, 10); if (k) act[k] = (act[k] || 0) + 1; };
+      d.quiz_attempts.forEach(function (a) { marcar(a.finished_at); });
+      d.submissions.forEach(function (s) { marcar(s.submitted_at); });
+      d.forum_posts.forEach(function (p) { marcar(p.created_at); });
+      d.messages.forEach(function (m) { marcar(m.created_at); });
+      var serie = [];
+      for (var i = 29; i >= 0; i--) {
+        var dd = new Date(); dd.setDate(dd.getDate() - i);
+        var k = dd.toISOString().slice(0, 10);
+        serie.push({ dia: k.slice(5), n: act[k] || 0 });
+      }
+      var evaluados = d.grades.filter(function (g) { return g.grade != null; });
+      var aprob = evaluados.filter(function (g) { return g.grade >= 6; }).length;
+      return Promise.resolve({
+        usuarios: por, cursos: d.courses.length, modulos: d.modules.length,
+        intentos: d.quiz_attempts.length, entregas: d.submissions.length,
+        mensajes: d.messages.length, foros: d.forum_posts.length,
+        serie: serie, aprob_pct: evaluados.length ? Math.round(aprob / evaluados.length * 100) : null,
+        certs: d.certificates.length
+      });
+    },
+
+    /* ---------- pendientes (estudiante) ---------- */
+    pendientes: function () {
+      if (!useDemo) return Promise.resolve([]);
+      var d = load();
+      var out = [];
+      d.enrollments.filter(function (e) { return e.student_id === me.id; }).forEach(function (e) {
+        var c = find(d, 'courses', e.course_id);
+        d.modules.filter(function (m) {
+          return m.course_id === e.course_id && m.visible && m.due_date &&
+            (m.type === 'assignment' || m.type === 'quiz');
+        }).forEach(function (m) {
+          var hecha = m.type === 'assignment'
+            ? d.submissions.some(function (s) { return s.module_id === m.id && s.student_id === me.id; })
+            : d.quiz_attempts.some(function (a) { return a.module_id === m.id && a.student_id === me.id && a.status !== 'open'; });
+          out.push({ mod: clone(m), course: c, hecha: hecha, vencida: new Date(m.due_date) < new Date() });
+        });
+      });
+      return Promise.resolve(out.sort(function (a, b) { return a.mod.due_date < b.mod.due_date ? -1 : 1; }));
+    },
   };
 
   window.Z = window.Z || {};
+
   window.Z.api = api;
 })();

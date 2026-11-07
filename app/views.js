@@ -3,9 +3,9 @@
   var Z = window.Z = window.Z || {};
   var api = function () { return Z.api; };
   var esc = function (s) { return Z.esc(s); };
-  var TICON = { page: 'page', libro: 'book', file: 'file', link: 'link', quiz: 'quiz', assignment: 'task', announcement: 'mega', forum: 'forum', html: 'code' };
-  var TNOMBRE = { page: 'Página', libro: 'Libro', file: 'Archivo', link: 'Enlace', quiz: 'Cuestionario', assignment: 'Tarea', announcement: 'Comunicado del curso', forum: 'Foro', html: 'Bloque HTML' };
-  var TIPO_ES = { page: 'página', libro: 'libro', file: 'archivo', link: 'enlace', quiz: 'cuestionario', assignment: 'tarea', announcement: 'comunicado', forum: 'foro', html: 'html', manual: 'manual' };
+  var TICON = { page: 'page', libro: 'book', file: 'file', link: 'link', quiz: 'quiz', assignment: 'task', announcement: 'mega', forum: 'forum', html: 'code', poll: 'sparkle' };
+  var TNOMBRE = { page: 'Página', libro: 'Libro', file: 'Archivo', link: 'Enlace', quiz: 'Cuestionario', assignment: 'Tarea', announcement: 'Comunicado del curso', forum: 'Foro', html: 'Bloque HTML', poll: 'Encuesta' };
+  var TIPO_ES = { page: 'página', libro: 'libro', file: 'archivo', link: 'enlace', quiz: 'cuestionario', assignment: 'tarea', announcement: 'comunicado', forum: 'foro', html: 'html', manual: 'manual', poll: 'encuesta' };
 
   /* render seguro de HTML incrustado (iframe aislado); si es una URL, reproductor de video */
   function bloqueEmbed(code) {
@@ -113,7 +113,8 @@
     api().myCourses().then(function (cursos) {
       var me = api().me();
       var h = topbar(me.role === 'estudiante' ? 'Mis cursos' : 'Cursos', '',
-        me.role === 'admin' ? '<button class="btn" id="mc_new">' + ZI('plus') + ' Nuevo curso</button>' : '');
+        me.role === 'admin' ? '<button class="btn" id="mc_new">' + ZI('plus') + ' Nuevo curso</button>'
+          : (me.role === 'estudiante' ? '<button class="btn sec" id="mc_join">' + ZI('plus') + ' Unirme con código</button>' : ''));
       h += '<div id="mc_lista" class="grid gr2"></div>';
       var main = Z.shell(h, '#/mis-cursos');
       var el = main.querySelector('#mc_lista');
@@ -125,6 +126,19 @@
       }).join('') : '<div class="vacio">' + ZI('book') + '<p>Sin cursos.</p></div>';
       var nb = main.querySelector('#mc_new');
       if (nb) nb.onclick = function () { modalCurso(null); };
+      var jb = main.querySelector('#mc_join');
+      if (jb) jb.onclick = function () {
+        var v = Z.modal('<h2>Unirme a un curso</h2><p style="color:var(--neg-500);font-size:14px">Tu docente te da el código del aula (ej.: BIO-2026).</p>' +
+          '<label>Código del curso</label><input id="jc_code" placeholder="ABC-1234" style="text-transform:uppercase">' +
+          '<div class="fila" style="justify-content:flex-end;margin-top:14px"><button class="btn sec" data-x>Cancelar</button><button class="btn" data-ok>Unirme</button></div>');
+        v.querySelector('[data-x]').onclick = function () { v.remove(); };
+        v.querySelector('[data-ok]').onclick = function () {
+          api().joinByCode(v.querySelector('#jc_code').value).then(function (r) {
+            if (r.error) { Z.toast(r.error, 'mal'); if (r.course) { v.remove(); location.hash = '#/curso/' + r.course.id; } return; }
+            v.remove(); Z.toast('¡Te uniste a ' + r.course.name + '!', 'ok'); misCursos();
+          });
+        };
+      };
     });
   }
 
@@ -149,8 +163,12 @@
             ? '<button class="btn blanco sm" id="c_aula">' + ZI('sparkle') + ' Diseñar aula</button>' +
               '<a class="btn blanco sm" href="#/curso/' + id + '/notas">' + ZI('star') + ' Calificaciones</a>' +
               '<a class="btn blanco sm" href="#/curso/' + id + '/asistencia">' + ZI('asist') + ' Asistencia</a>' +
-              '<button class="btn sm" id="c_addsec">' + ZI('plus') + ' Sección</button>'
+              '<a class="btn blanco sm" href="#/progreso/' + id + '">' + ZI('cap') + ' Progreso</a>' +
+              '<a class="btn blanco sm" href="#/flashcards/' + id + '">' + ZI('book') + ' Flashcards</a>' +
+              '<button class="btn sm" id="c_addsec">' + ZI('plus') + ' Sección</button>' +
+              (c.enroll_code ? '<span class="pill" style="background:rgba(255,255,255,.22);color:#fff">Código: ' + esc(c.enroll_code) + '</span>' : '')
             : (me.role === 'estudiante' ? '<a class="btn blanco sm" href="#/curso/' + id + '/asistencia">' + ZI('asist') + ' Mi asistencia</a>' +
+              '<a class="btn blanco sm" href="#/flashcards/' + id + '">' + ZI('book') + ' Flashcards</a>' +
               '<a class="btn sm" href="#/curso/' + id + '/notas">' + ZI('star') + ' Mis notas</a>' : '')) +
         '</div></div>';
       h += '<div id="c_secs"></div>';
@@ -252,6 +270,7 @@
         if (m.type === 'forum') return esc((c.description || c.topic || 'Espacio de debate').slice(0, 90));
         if (m.type === 'html') return 'Contenido incrustado' + (c.video_url ? ' · video' : '');
         if (m.type === 'libro') return 'Libro · ' + Math.max((c.capitulos || []).length, 1) + ' capítulo' + ((c.capitulos || []).length === 1 ? '' : 's');
+        if (m.type === 'poll') return 'Encuesta' + (c.pregunta ? ' · ' + esc(c.pregunta.slice(0, 60)) : '');
         return '';
       }
 
@@ -369,6 +388,10 @@
       '<p style="font-size:12.5px;color:var(--neg-300);margin-top:8px">Las preguntas se editan aparte desde el ítem del curso → botón de edición → "Editar preguntas".</p>';
     else if (tipo === 'announcement') cuerpo = '<label>Mensaje</label>' + Z.voz.wrap('<textarea id="mm_body">' + esc(c.body || '') + '</textarea>');
     else if (tipo === 'forum') cuerpo = '<label>Consigna del foro (qué se debate)</label>' + Z.voz.wrap('<textarea id="mm_desc" style="min-height:90px">' + esc(c.description || '') + '</textarea>');
+    else if (tipo === 'poll') cuerpo =
+      '<label>Pregunta de la encuesta</label><input id="mm_preg" value="' + esc(c.pregunta || '') + '" placeholder="Ej.: ¿Qué tema repasamos antes del examen?">' +
+      '<label style="margin-top:6px">Opciones (una por línea)</label>' + Z.voz.wrap('<textarea id="mm_ops" style="min-height:90px" placeholder="Opción A&#10;Opción B&#10;Opción C">' + esc((c.opciones || []).join('\n')) + '</textarea>') +
+      '<p style="font-size:12px;color:var(--neg-300);margin-top:6px">Los estudiantes votan una vez y ven los resultados en barras en vivo.</p>';
     else if (tipo === 'libro') cuerpo =
       '<label>Capítulos del libro</label><div id="mm_caps"></div>' +
       '<button type="button" class="btn sec sm" id="mm_cap_add" style="margin-top:4px">' + ZI('plus') + ' Agregar capítulo</button>' +
@@ -441,6 +464,10 @@
           pass_grade: Number(v.querySelector('#mm_pass').value) || 6, shuffle: v.querySelector('#mm_shuf').checked };
       } else if (tipo === 'forum') {
         content = { description: v.querySelector('#mm_desc').value };
+      } else if (tipo === 'poll') {
+        var ops = v.querySelector('#mm_ops').value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
+        if (!v.querySelector('#mm_preg').value.trim() || ops.length < 2) return Z.toast('La encuesta necesita pregunta y 2+ opciones', 'mal');
+        content = { pregunta: v.querySelector('#mm_preg').value.trim(), opciones: ops };
       } else if (tipo === 'libro') {
         var caps = [];
         v.querySelectorAll('#mm_caps .caprow').forEach(function (d, ix) {
@@ -503,6 +530,10 @@
         else if (m.type === 'announcement') h += '<div class="card"><div class="vozrow">' + Z.voz.readBtn('#mod_txt') + '<span>Escuchar</span></div><div id="mod_txt">' + Z.md(m.content.body || '') + '</div><small style="color:var(--neg-300)">' + Z.fmtFecha(m.created_at, true) + '</small></div>';
         else if (m.type === 'html') h += '<div class="card">' + bloqueEmbed(m.content.video_url || '') + bloqueEmbed(m.content.html || '') +
           ((!m.content.video_url && !m.content.html) ? '<p style="color:var(--neg-300)">Bloque vacío.</p>' : '') + '</div>';
+        else if (m.type === 'poll') {
+          var ops = (m.content.opciones || []);
+          h += '<div class="card" style="max-width:1180px"><h2 class="md-h" style="margin-top:0">' + esc(m.content.pregunta || 'Encuesta') + '</h2><div id="poll_box"></div></div>';
+        }
         else if (m.type === 'libro') {
           var caps = (m.content.capitulos && m.content.capitulos.length) ? m.content.capitulos : [{ t: 'Capítulo 1', b: '' }];
           h += '<div class="libro"><nav class="libro-nav"><h4>Índice</h4>' +
@@ -516,6 +547,27 @@
             '<button class="btn sm" id="libro_next">Siguiente ' + ZI('chev') + '</button></div></div></div>';
         }
         var main = Z.shell(h, '#/mis-cursos');
+        if (m.type === 'poll') {
+          var opsP = (m.content.opciones || []);
+          var pintarPoll = function () {
+            api().pollResults(m.id).then(function (r) {
+              var box = main.querySelector('#poll_box');
+              var total = Math.max(r.total, 1);
+              box.innerHTML = opsP.map(function (op, ix) {
+                var n = r.votes[ix] || 0, pct = Math.round(n / total * 100);
+                return '<button class="pollop' + (r.mine === ix ? ' votada' : '') + '" data-voto="' + ix + '">' +
+                  '<span class="pop-txt"><b>' + esc(op) + '</b>' + (r.mine === ix ? ' ' + ZI('check') : '') + '</span>' +
+                  '<span class="pop-bar"><i style="width:' + pct + '%"></i></span>' +
+                  '<span class="pop-n">' + n + ' (' + pct + '%)</span></button>';
+              }).join('') + '<p style="color:var(--neg-300);font-size:13px;margin-top:8px">' + r.total + ' voto' + (r.total === 1 ? '' : 's') +
+                (r.mine != null ? ' · podés cambiar tu voto' : '') + '</p>';
+              box.querySelectorAll('[data-voto]').forEach(function (b) {
+                b.onclick = function () { api().pollVote(m.id, Number(b.getAttribute('data-voto'))).then(pintarPoll); };
+              });
+            });
+          };
+          pintarPoll();
+        }
         if (m.type === 'libro') {
           var caps2 = (m.content.capitulos && m.content.capitulos.length) ? m.content.capitulos : [{ t: 'Capítulo 1', b: '' }];
           var ixCap = 0;
@@ -1200,7 +1252,8 @@
           var d = it.mod.due_date.slice(0, 10);
           (porDia[d] = porDia[d] || []).push(it);
         });
-        var h = topbar('Agenda', 'Fechas de entrega de todos tus cursos');
+        var h = topbar('Agenda', 'Fechas de entrega de todos tus cursos',
+          '<button class="btn sec sm" id="ag_ics">' + ZI('download') + ' Exportar (.ics)</button>');
         var dias = Object.keys(porDia).sort();
         h += dias.length ? dias.map(function (d) {
           var vencido = d < new Date().toISOString().slice(0, 10);
@@ -1214,7 +1267,9 @@
                 ' <span class="pill" style="background:' + esc(it.curso.color || '#7C3AED') + '22;color:' + esc(it.curso.color || '#7C3AED') + '">' + esc(it.curso.short_name || it.curso.name) + '</span></div>';
             }).join('') + '</div>';
         }).join('') : '<div class="card vacio">' + ZI('cal') + '<p>No hay entregas con fecha.</p></div>';
-        Z.shell(h, '#/agenda');
+        var main = Z.shell(h, '#/agenda');
+        var eb = main.querySelector('#ag_ics');
+        if (eb) eb.onclick = function () { Z.views.exportIcs(); };
       });
     });
   }
@@ -1487,6 +1542,7 @@
           return '<option value="' + d.id + '"' + (c && c.teacher_id === d.id ? ' selected' : '') + '>' + esc(d.full_name) + '</option>';
         }).join('') + '</select>' +
         '<label>Ciclo lectivo</label><input id="nc_y" value="' + esc(c ? c.school_year || '2026' : '2026') + '">' +
+        '<label style="margin-top:6px">Código de inscripción (opcional)</label><input id="nc_c" value="' + esc(c && c.enroll_code || '') + '" placeholder="BIO-2026 — los estudiantes se unen solos">' +
         '<div class="fila" style="justify-content:flex-end;margin-top:14px"><button class="btn sec" data-x>Cancelar</button><button class="btn" data-ok>Guardar</button></div>');
       v.querySelector('[data-x]').onclick = function () { v.remove(); };
       v.querySelector('[data-ok]').onclick = function () {
@@ -1494,7 +1550,8 @@
         if (!n) return Z.toast('Poné un nombre', 'mal');
         api().saveCourse({ id: c ? c.id : null, name: n, short_name: v.querySelector('#nc_s').value.trim(),
           color: v.querySelector('#nc_c').value, description: v.querySelector('#nc_d').value.trim(),
-          teacher_id: v.querySelector('#nc_t').value, school_year: v.querySelector('#nc_y').value.trim() })
+          teacher_id: v.querySelector('#nc_t').value, school_year: v.querySelector('#nc_y').value.trim(),
+          enroll_code: v.querySelector('#nc_c').value.trim().toUpperCase() })
           .then(function () { v.remove(); Z.toast('Curso guardado', 'ok'); (done || home)(); });
       };
     });
@@ -1649,16 +1706,39 @@
 
   /* ================= MIS LOGROS ================= */
   function misLogros() {
-    api().badges().then(function (defs) {
+    Promise.all([api().badges(), api().myXp ? api().myXp() : Promise.resolve(null),
+                 api().leaderboard ? api().leaderboard() : Promise.resolve([]),
+                 api().myCerts ? api().myCerts() : Promise.resolve([])]).then(function (rr) {
+      var defs = rr[0], xp = rr[1], tabla = rr[2], certs = rr[3];
       var ganadas = defs.filter(function (b) { return b.ok; }).length;
       var h = topbar('Mis logros', ganadas + ' de ' + defs.length + ' insignias ganadas');
+      if (xp) {
+        var pctN = Math.min(100, Math.round((xp.total - xp.acum) / Math.max(1, xp.next - xp.acum) * 100));
+        h += '<div class="xpcard"><div class="xp-niv"><b>Nivel ' + xp.level + '</b><span>' + xp.total + ' XP</span></div>' +
+          '<div class="xp-bar"><i style="width:' + pctN + '%"></i></div>' +
+          '<div class="xp-info"><span>' + ZI('flame') + ' Racha: ' + xp.streak + ' día' + (xp.streak === 1 ? '' : 's') + '</span>' +
+          '<span>' + (xp.next - xp.total) + ' XP para nivel ' + (xp.level + 1) + '</span></div></div>';
+      }
+      if (certs && certs.length) {
+        h += '<div class="card" style="max-width:1180px"><h3 style="margin:0 0 10px;font-size:15px">Certificados</h3>' + certs.map(function (ct) {
+          return '<a class="hilo" href="#/cert/' + ct.code + '"><span class="nico" style="color:var(--vio-500)">' + ZI('award') + '</span>' +
+            '<span class="h-txt"><b>' + esc(ct.course_name) + '</b><small>' + Z.fmtFecha(ct.issued_at) + '</small></span>' +
+            '<span class="pill vio">' + ct.code + '</span></a>';
+        }).join('') + '</div>';
+      }
       h += '<div class="grid gr3">' + defs.map(function (b) {
         return '<div class="insignia ' + (b.ok ? 'ganada' : 'locked') + '">' +
           '<div class="stick">' + ZI(b.icon) + '</div>' +
           '<b>' + esc(b.nombre) + '</b><small>' + esc(b.desc) + '</small>' +
           (b.ok ? '<div class="med">' + ZI('award') + ' ¡Ganada!</div>' : '<small style="color:var(--neg-150)">Todavía no</small>') + '</div>';
       }).join('') + '</div>';
-      if (ganadas >= 3) h = h.replace('</div><div class="grid', '</div>');
+      if (tabla && tabla.length) {
+        h += '<div class="card" style="max-width:1180px"><h3 style="margin:0 0 10px;font-size:15px">Tabla de posiciones</h3>' +
+          tabla.slice(0, 10).map(function (t, ix) {
+            return '<div class="hilo"><span class="pos-n">' + (ix + 1) + '°</span>' +
+              '<span class="h-txt"><b>' + esc(t.name) + '</b></span><span class="pill ' + (ix === 0 ? 'vio' : 'gris') + '">' + t.pts + ' XP</span></div>';
+          }).join('') + '</div>';
+      }
       Z.shell(h, '#/mis-logros');
     });
   }

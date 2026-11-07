@@ -113,8 +113,8 @@
     var demo = Z.api.isDemo();
     root.innerHTML =
       '<div class="loginwrap"><div class="logincard">' +
-      '<div class="loginlat">' + Z_LOGO +
-      '<h1>Zeiro</h1><p>' + esc(CONFIG.TAGLINE) + '. Materiales, tareas, cuestionarios y notas — simple para docentes y estudiantes.</p>' +
+      '<div class="loginlat"><img src="assets/logo-zeiro.png" alt="Zeiro" style="width:200px;display:block;margin-bottom:10px">' +
+      '<h1 style="display:none">Zeiro</h1><p>' + esc(CONFIG.TAGLINE) + '. Materiales, tareas, cuestionarios y notas — simple para docentes y estudiantes.</p>' +
       '<div class="rayas"></div>' + Z_ZEBRA('saludo') + '</div>' +
       '<div class="loginform"><h2 style="margin-bottom:4px">Ingresar</h2>' +
       (demo
@@ -146,9 +146,9 @@
 
   /* ---------------- SHELL ---------------- */
   var NAV = {
-    estudiante: [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Mis cursos'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados'], ['#/mis-notas', 'star', 'Mis notas'], ['#/mis-logros', 'award', 'Mis logros']],
-    docente:    [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Mis cursos'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados']],
-    admin:      [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Cursos'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados'], ['#/admin/usuarios', 'users', 'Usuarios'], ['#/admin/cursos', 'gear', 'Gestión']]
+    estudiante: [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Mis cursos'], ['#/pendientes', 'clock', 'Pendientes'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados'], ['#/mensajes', 'send', 'Mensajes'], ['#/mis-notas', 'star', 'Mis notas'], ['#/mis-logros', 'award', 'Mis logros']],
+    docente:    [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Mis cursos'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados'], ['#/mensajes', 'send', 'Mensajes']],
+    admin:      [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Cursos'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados'], ['#/mensajes', 'send', 'Mensajes'], ['#/panel', 'cap', 'Estadísticas'], ['#/admin/usuarios', 'users', 'Usuarios'], ['#/admin/cursos', 'gear', 'Gestión']]
   };
 
   function shell(content, ruta) {
@@ -158,7 +158,7 @@
     var iniciales = me.full_name.split(/[\s,]+/).filter(Boolean).map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
     root.innerHTML =
       '<div class="shell"><aside class="side">' +
-      '<div class="marca">' + Z_LOGO + '<div><b>Zeiro</b><small>' + esc(CONFIG.TAGLINE) + '</small></div></div>' +
+      '<div class="marca"><img src="assets/logo-mark.png" alt="" class="logo" style="object-fit:contain"><div><b>Zeiro</b><small>' + esc(CONFIG.TAGLINE) + '</small></div></div>' +
       '<nav>' + nav.map(function (n) {
         return '<a href="' + n[0] + '" class="' + (ruta === n[0] ? 'on' : '') + '">' + ZI(n[1]) + '<span>' + n[2] + '</span></a>';
       }).join('') + '</nav>' +
@@ -233,6 +233,13 @@
       else if (partes[0] === 'mis-cursos') v.misCursos();
       else if (partes[0] === 'mis-notas') v.misNotas();
       else if (partes[0] === 'mis-logros') v.misLogros();
+      else if (partes[0] === 'mensajes') v.mensajes();
+      else if (partes[0] === 'chat') v.chat(partes[1]);
+      else if (partes[0] === 'pendientes') v.pendientes();
+      else if (partes[0] === 'progreso') v.progreso(partes[1]);
+      else if (partes[0] === 'flashcards') v.flashcards(partes[1]);
+      else if (partes[0] === 'panel') v.panel();
+      else if (partes[0] === 'cert') v.cert(partes[1]);
       else if (partes[0] === 'admin' && partes[1] === 'usuarios') v.adminUsuarios();
       else if (partes[0] === 'admin' && partes[1] === 'cursos') v.adminCursos();
       else v.home();
