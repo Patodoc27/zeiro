@@ -175,6 +175,7 @@
                 '<a href="#/progreso/' + id + '">' + ZI('cap') + ' Progreso</a>' +
                 '<a href="#/flashcards/' + id + '">' + ZI('book') + ' Flashcards</a>' +
                 '<button type="button" id="c_addsec">' + ZI('plus') + ' Nueva sección</button>' +
+                '<button type="button" id="c_emails">' + ZI('send') + ' Emails enviados</button>' +
               '</span></span>' +
               (c.enroll_code ? '<span class="pill" style="background:rgba(255,255,255,.22);color:#fff">Código: ' + esc(c.enroll_code) + '</span>' : '')
             : (me.role === 'estudiante' ? '<a class="btn blanco sm" href="#/curso/' + id + '/asistencia">' + ZI('asist') + ' Mi asistencia</a>' +
@@ -292,6 +293,17 @@
         if (addSec) addSec.onclick = function () { modalSeccion(null); };
         var ba = main.querySelector('#c_aula');
         if (ba) ba.onclick = function () { modalAula(c); };
+        var be = main.querySelector('#c_emails');
+        if (be) be.onclick = function () {
+          api().emailLog(id).then(function (log) {
+            Z.modal('<h2>Emails enviados a estudiantes</h2>' +
+              (log.length ? log.map(function (e) {
+                return '<div class="hilo"><div style="flex:1;min-width:0"><b>' + esc(e.subject) + '</b>' +
+                  '<small style="display:block;color:var(--neg-300)">Para: ' + esc(e.to_name) + ' &lt;' + esc(e.to_email) + '&gt; · ' + Z.fmtFecha(e.at, true) + '</small>' +
+                  '<small style="display:block;color:var(--neg-500)">' + esc(e.body) + '</small></div></div>';
+              }).join('') : '<div class="vacio"><p>Todavía no se enviaron avisos en este aula.</p></div>'), 'xl');
+          });
+        };
         wrap.querySelectorAll('[data-editsec]').forEach(function (b) {
           b.onclick = function () {
             var s = c.sections.filter(function (x) { return x.id === b.getAttribute('data-editsec'); })[0];
@@ -527,9 +539,15 @@
       content.etiqueta_color = etqc ? etqc.value : (c.etiqueta_color || '#7C3AED');
       var dfrom = v.querySelector('#mm_from').value, duntil = v.querySelector('#mm_until').value;
       var guardar = function () {
+        var esNuevo = !m;
         api().saveModule(courseId, { id: m ? m.id : null, section_id: sectionId, type: tipo, title: title, content: content, due_date: due, visible: m ? m.visible : true,
           available_from: dfrom ? new Date(dfrom).toISOString() : null, available_until: duntil ? new Date(duntil).toISOString() : null })
-          .then(function () { v.remove(); Z.toast('Guardado', 'ok'); done && done(); });
+          .then(function () {
+            if (esNuevo) api().notifyMaterial(courseId, title, TNOMBRE[tipo] || tipo).then(function (n) {
+              if (n) Z.toast('Email enviado a ' + n + ' estudiante' + (n === 1 ? '' : 's'), 'ok');
+            });
+            v.remove(); Z.toast('Guardado', 'ok'); done && done();
+          });
       };
       var vf = v.querySelector('#mm_vfile');
       var mf = v.querySelector('#mm_file');

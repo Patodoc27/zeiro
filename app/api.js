@@ -235,6 +235,45 @@
       });
       return supa().from('modules').upsert(row2).select().single().then(function (r) { return r.data; });
     },
+    /* aviso por email a los estudiantes inscriptos cuando se publica material.
+       En demo queda registrado en email_log (ver "Emails enviados" en Gestionar);
+       con Supabase se conecta un proveedor real (EmailJS/Resend, gratis). */
+    notifyMaterial: function (courseId, titulo, tipoNombre, hash) {
+      var enviar = function (d) {
+        var cc = find(d, 'courses', courseId);
+        var alumnos = (d.enrollments || []).filter(function (e) { return e.course_id === courseId; });
+        var n = 0;
+        alumnos.forEach(function (e) {
+          var st = find(d, 'profiles', e.student_id);
+          if (!st) return;
+          n++;
+          d.email_log = d.email_log || [];
+          d.email_log.push({
+            id: uid(d, 'mail'), course_id: courseId, to_email: st.email || (st.id + '@zeiro.demo'),
+            to_name: st.full_name, subject: 'Nuevo material en ' + (cc ? (cc.short_name || cc.name) : 'tu aula'),
+            body: 'Hola ' + st.full_name + ': el docente publicó "' + titulo + '" (' + tipoNombre + ') en ' + (cc ? cc.name : 'el aula') + '. Ingresá a Zeiro para verlo.',
+            at: now()
+          });
+          d.notifs = d.notifs || [];
+          d.notifs.push({ user_id: e.student_id, icon: 'mail', titulo: 'Nuevo ' + tipoNombre + ': ' + titulo,
+            extra: cc ? (cc.short_name || cc.name) : '', hash: hash || '#/mis-cursos', fecha: now() });
+        });
+        save(d);
+        return n;
+      };
+      if (useDemo) { var d = load(); return Promise.resolve(enviar(d)); }
+      /* Supabase: insert en tabla email_log + notifs; el envío real lo hace
+         una Edge Function o EmailJS con las mismas filas. */
+      return Promise.resolve(0);
+    },
+    emailLog: function (courseId) {
+      if (useDemo) {
+        var d = load();
+        return Promise.resolve((d.email_log || []).filter(function (x) { return !courseId || x.course_id === courseId; })
+          .sort(function (a, b) { return a.at < b.at ? 1 : -1; }).slice(0, 30));
+      }
+      return Promise.resolve([]);
+    },
     deleteModule: function (id) {
       if (useDemo) {
         var d = load();
@@ -864,6 +903,11 @@
             }
           });
         }
+        (d.notifs || []).forEach(function (n) {
+          if (n.user_id === me.id && n.fecha > seen) {
+            items.push({ tipo: 'aviso', icon: n.icon || 'send', titulo: n.titulo, extra: n.extra || '', hash: n.hash, fecha: n.fecha });
+          }
+        });
         items.sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; });
         return Promise.resolve(items.slice(0, 15));
       }
