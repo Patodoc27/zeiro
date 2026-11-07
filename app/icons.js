@@ -54,38 +54,10 @@
   window.Z_LOGO = '<svg class="logo" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#14141F"/><path d="M0 47l10-6 10 6 10-6 10 6 10-6 10 6 4-1v20H0z" fill="#7C3AED"/><path d="M0 53l10-6 10 6 10-6 10 6 10-6 10 6 4-1v19H0z" fill="#2563EB"/><path d="M0 59l10-6 10 6 10-6 10 6 10-6 10 6 4-1v19H0z" fill="#14B8A6"/><path d="M12 11h40L15 39h37" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   /* Ziro · la vicuña mascota de Zeiro, animal emblemático del NOA (SVG propio, varias poses) */
+  /* Emblema decorativo Zeiro (sin mascotas): marca + halo */
   window.Z_VICUNA = function (pose) {
-    var oido =
-      '<path d="M26 26c-5-7-7-16-5-21 1.4-3.5 6-3 8 0l5 14z" fill="#C98F4E" stroke="#14141F" stroke-width="3.4"/>' +
-      '<path d="M27 21c-2.6-4.8-4-10.5-3-13.8l4.5 10.5z" fill="#F4E3CE"/>' +
-      '<path d="M50 27c1.5-8 5-16 9-20 2.8-2.8 6-1 5.4 3l-5 17z" fill="#C98F4E" stroke="#14141F" stroke-width="3.4"/>' +
-      '<path d="M54 23c.8-5 3-10.5 6-14.3l-2.8 13z" fill="#F4E3CE"/>';
-    var cuello =
-      '<path d="M28 64c0 14-2 24-4 28h32c-2-4-4-14-4-28z" fill="#C98F4E" stroke="#14141F" stroke-width="3.4"/>' +
-      '<path d="M33 70c0 10-1 18-2 22h18c-1-4-2-12-2-22z" fill="#FBF1E3"/>';
-    var cara =
-      '<path d="M40 14c-13 0-21 10-21 25 0 15 9 26 21 26s21-11 21-26c0-15-8-25-21-25z" fill="#FBF1E3" stroke="#14141F" stroke-width="3.4"/>' +
-      '<path d="M40 14c-13 0-21 10-21 25v1c3-11 11-17 21-17s18 6 21 17v-1c0-15-8-25-21-25z" fill="#C98F4E"/>' +
-      '<ellipse cx="30" cy="41" rx="4.2" ry="5.4" fill="#14141F"/><circle cx="31.6" cy="38.8" r="1.8" fill="#fff"/>' +
-      '<ellipse cx="50" cy="41" rx="4.2" ry="5.4" fill="#14141F"/><circle cx="51.6" cy="38.8" r="1.8" fill="#fff"/>' +
-      '<path d="M24 33q5-3 9-1M47 32q5-2 9 1" stroke="#14141F" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
-      '<path d="M33 57c0-4 3-7 7-7s7 3 7 7c0 4-3 6-7 6s-7-2-7-6z" fill="#F4E3CE" stroke="#14141F" stroke-width="2.6"/>' +
-      '<path d="M36 55.4q1.4-1.8 2.8 0M41.2 55.4q1.4-1.8 2.8 0" stroke="#14141F" stroke-width="1.8" fill="none" stroke-linecap="round"/>' +
-      '<path d="M40 59v2.6" stroke="#14141F" stroke-width="2" stroke-linecap="round"/>' +
-      '<circle cx="22" cy="50" r="3" fill="#F5B8C4" opacity=".55"/><circle cx="58" cy="50" r="3" fill="#F5B8C4" opacity=".55"/>';
-    var boca = '<path d="M36 62q4 3 8 0" stroke="#14141F" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
-    var extra = '';
-    if (pose === 'fest') extra =
-      '<circle cx="12" cy="34" r="2.5" fill="#7C3AED"/><circle cx="70" cy="28" r="2.5" fill="#14B8A6"/>' +
-      '<circle cx="16" cy="20" r="2" fill="#60A5FA"/><circle cx="68" cy="46" r="2" fill="#F59E0B"/>' +
-      '<path d="M12 44l6 2M66 16l5 4M10 52l4 4" stroke="#14B8A6" stroke-width="2.5" stroke-linecap="round"/>';
-    else if (pose === 'pensar') {
-      extra = '<path d="M64 12l2.4 6 6 2.4-6 2.4-2.4 6-2.4-6-6-2.4 6-2.4z" fill="#7C3AED"/>';
-      boca = '<path d="M37 62.5h6" stroke="#14141F" stroke-width="2.4" stroke-linecap="round"/>';
-    } else if (pose === 'saludo') extra =
-      '<path d="M64 62q11 0 10-11" stroke="#14B8A6" stroke-width="5" fill="none" stroke-linecap="round"/>' +
-      '<path d="M74 46l4-7M71 43l1-8M68 41V32" stroke="#14B8A6" stroke-width="3.6" stroke-linecap="round"/>';
-    return '<svg viewBox="0 0 80 92" class="ziro">' + oido + cuello + cara + boca + extra + '</svg>';
+    return '<span class="zemb"><span class="zemb-halo"></span>' +
+      '<img src="assets/logo-mark.png" alt="Zeiro" class="zemb-img"></span>';
   };
   window.Z_ZEBRA = window.Z_VICUNA;
 })();

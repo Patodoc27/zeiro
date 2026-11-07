@@ -1462,7 +1462,7 @@
 
   /* ---------- diseñar mi aula (docente) ---------- */
   function modalAula(c) {
-    var pats = [['liso', 'Liso'], ['rayas', 'Rayas zebra'], ['puntos', 'Puntos'], ['ondas', 'Ondas']];
+    var pats = [['liso', 'Liso'], ['rayas', 'Rayas'], ['puntos', 'Puntos'], ['ondas', 'Ondas']];
     var v = Z.modal('<h2>Diseñar mi aula</h2>' +
       '<div class="aula-prev" id="ap_prev"><div class="pat" id="ap_pat"></div>' +
       '<div class="ah-txt"><span class="sigla" id="ap_sig"></span><h1>' + esc(c.name) + '</h1><p id="ap_welt"></p></div></div>' +
