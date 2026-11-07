@@ -16,6 +16,10 @@
     var d = null;
     try { d = JSON.parse(localStorage.getItem(LS)); } catch (e) { d = null; }
     if (!d || !d.meta) { d = clone(window.Z_DEMO_SEED); save(d); }
+    // tablas agregadas en v2: garantizar que existan en stores viejos
+    ['forum_posts', 'bank', 'attendance'].forEach(function (t) {
+      if (!d[t]) { d[t] = clone(window.Z_DEMO_SEED[t] || []); save(d); }
+    });
     return d;
   }
   function save(d) { localStorage.setItem(LS, JSON.stringify(d)); }
@@ -187,11 +191,12 @@
         var d = load();
         var s = sec.id ? find(d, 'sections', sec.id) : null;
         if (!s) { s = { id: uid(d, 's'), course_id: courseId, position: d.sections.filter(function (x) { return x.course_id === courseId; }).length + 1 }; d.sections.push(s); }
-        s.title = sec.title;
+        ['title', 'color', 'img'].forEach(function (k) { if (sec[k] !== undefined) s[k] = sec[k]; });
         save(d); return Promise.resolve(clone(s));
       }
       var row = { course_id: courseId, title: sec.title };
       if (sec.id) row.id = sec.id;
+      ['color', 'img'].forEach(function (k) { if (sec[k] !== undefined) row[k] = sec[k]; });
       return supa().from('sections').upsert(row).select().single().then(function (r) { return r.data; });
     },
     deleteSection: function (id) {
@@ -212,13 +217,13 @@
                   position: d.modules.filter(function (x) { return x.course_id === courseId; }).length + 1 };
           d.modules.push(row);
         }
-        ['section_id', 'type', 'title', 'content', 'visible', 'due_date'].forEach(function (k) {
+        ['section_id', 'type', 'title', 'content', 'visible', 'due_date', 'available_from', 'available_until'].forEach(function (k) {
           if (m[k] !== undefined) row[k] = m[k];
         });
         save(d); return Promise.resolve(clone(row));
       }
       var row2 = { course_id: courseId };
-      ['id', 'section_id', 'type', 'title', 'content', 'visible', 'due_date'].forEach(function (k) {
+      ['id', 'section_id', 'type', 'title', 'content', 'visible', 'due_date', 'available_from', 'available_until'].forEach(function (k) {
         if (m[k] !== undefined) row2[k] = m[k];
       });
       return supa().from('modules').upsert(row2).select().single().then(function (r) { return r.data; });
@@ -228,6 +233,7 @@
         var d = load();
         d.modules = d.modules.filter(function (m) { return m.id !== id; });
         d.questions = d.questions.filter(function (q) { return q.module_id !== id; });
+        d.forum_posts = d.forum_posts.filter(function (p) { return p.module_id !== id; });
         save(d); return Promise.resolve();
       }
       return supa().from('modules').delete().eq('id', id);
@@ -243,7 +249,21 @@
         var tmp = sibs[i].position; sibs[i].position = sibs[j].position; sibs[j].position = tmp;
         save(d); return Promise.resolve();
       }
-      return Promise.resolve(); // en supabase: reordenar vía update position (análogo)
+      return supa().from('modules').select('id,section_id,position').eq('id', id).single().then(function (r) {
+        var m = r.data; if (!m) return;
+        return supa().from('modules').select('id,position').eq('section_id', m.section_id).order('position')
+          .then(function (rs) {
+            var sibs = rs.data || [];
+            var i = -1;
+            sibs.forEach(function (x, ix) { if (x.id === id) i = ix; });
+            var j = i + dir;
+            if (i < 0 || j < 0 || j >= sibs.length) return;
+            return Promise.all([
+              supa().from('modules').update({ position: sibs[j].position }).eq('id', sibs[i].id),
+              supa().from('modules').update({ position: sibs[i].position }).eq('id', sibs[j].id)
+            ]);
+          });
+      });
     },
     duplicateCourse: function (courseId, newName) {
       if (useDemo) {
@@ -266,6 +286,13 @@
         d.questions.filter(function (q) { return modMap[q.module_id]; }).forEach(function (q) {
           var nq = clone(q); nq.id = uid(d, 'q'); nq.module_id = modMap[q.module_id];
           d.questions.push(nq);
+        });
+        d.forum_posts.filter(function (p) { return modMap[p.module_id]; }).forEach(function (p) {
+          var np = clone(p); np.id = uid(d, 'fp'); np.module_id = modMap[p.module_id];
+          d.forum_posts.push(np);
+        });
+        d.bank.filter(function (q) { return q.course_id === courseId; }).forEach(function (q) {
+          var nq = clone(q); nq.id = uid(d, 'bk'); nq.course_id = nc.id; d.bank.push(nq);
         });
         d.enrollments.filter(function (e) { return e.course_id === courseId; }).forEach(function (e) {
           var ne = clone(e); ne.id = uid(d, 'en'); ne.course_id = nc.id; d.enrollments.push(ne);
@@ -353,6 +380,7 @@
           id: uid(d, 'a'), module_id: moduleId, student_id: me.id,
           started_at: now(), finished_at: now(), answers: answers,
           score: g.score, max_score: g.max, needs_review: g.needs_review,
+          auto_score: g.score, essay_scores: {},
           status: g.needs_review ? 'submitted' : 'graded'
         };
         d.quiz_attempts.push(a);
@@ -377,23 +405,39 @@
         }).select().single().then(function (r) { return r.data; });
       });
     },
-    reviewAttempt: function (attemptId, extraScore, feedback) {
+    reviewAttempt: function (attemptId, essayScores, feedback) {
+      // essayScores: {questionId: puntos}
       if (useDemo) {
         var d = load();
         var a = find(d, 'quiz_attempts', attemptId);
-        a.score = Math.round((a.score + extraScore) * 10) / 10;
+        a.essay_scores = essayScores || {};
+        var extra = 0;
+        for (var k in a.essay_scores) extra += Number(a.essay_scores[k]) || 0;
+        a.score = Math.round(((a.auto_score || 0) + extra) * 10) / 10;
         a.needs_review = false; a.status = 'graded'; a.feedback = feedback || null;
         var m = find(d, 'modules', a.module_id);
         var maxG = (m.content && m.content.max_grade) || 10;
         var nota = a.max_score ? Math.round(a.score * maxG / a.max_score * 10) / 10 : 0;
+        var tiene = false;
         d.grades.forEach(function (gr) {
           if (gr.course_id === m.course_id && gr.student_id === a.student_id && gr.module_id === a.module_id) {
+            tiene = true;
             if (nota > (gr.grade || 0)) { gr.grade = nota; gr.updated_at = now(); }
           }
         });
-        save(d); return Promise.resolve(a);
+        if (!tiene) d.grades.push({ id: uid(d, 'g'), course_id: m.course_id, student_id: a.student_id, module_id: a.module_id, grade: nota, max_grade: maxG, weight: 1, updated_at: now() });
+        save(d); return Promise.resolve(clone(a));
       }
-      return Promise.resolve();
+      var extra2 = 0;
+      for (var k2 in (essayScores || {})) extra2 += Number(essayScores[k2]) || 0;
+      return supa().from('quiz_attempts').select('*').eq('id', attemptId).single().then(function (r) {
+        var a = r.data;
+        var score = Math.round(((a.auto_score || a.score || 0) + extra2) * 10) / 10;
+        return supa().from('quiz_attempts').update({
+          essay_scores: essayScores || {}, score: score,
+          needs_review: false, status: 'graded', feedback: feedback || null
+        }).eq('id', attemptId).select().single().then(function (r2) { return r2.data; });
+      });
     },
 
     /* ---------- entregas ---------- */
@@ -420,18 +464,19 @@
           return (r.data || []).map(function (s) { s.student_name = s.student && s.student.full_name; return s; });
         });
     },
-    submitAssignment: function (moduleId, body, fileName) {
+    submitAssignment: function (moduleId, body, fileName, embedHtml) {
       if (useDemo) {
         var d = load();
         var s = null;
         d.submissions.forEach(function (x) { if (x.module_id === moduleId && x.student_id === me.id) s = x; });
         if (!s) { s = { id: uid(d, 'sb'), module_id: moduleId, student_id: me.id }; d.submissions.push(s); }
         s.body = body; s.file_url = fileName || s.file_url || null; s.submitted_at = now();
+        if (embedHtml !== undefined) s.embed = embedHtml || null;
         save(d); return Promise.resolve(clone(s));
       }
       return supa().from('submissions').upsert({
         module_id: moduleId, student_id: me.id, body: body,
-        file_url: fileName || null, submitted_at: now()
+        file_url: fileName || null, embed_html: embedHtml || null, submitted_at: now()
       }, { onConflict: 'module_id,student_id' }).select().single().then(function (r) { return r.data; });
     },
     gradeSubmission: function (id, grade, feedback) {
@@ -553,13 +598,13 @@
         var d = load();
         var row = c.id ? find(d, 'courses', c.id) : null;
         if (!row) { row = { id: uid(d, 'c'), active: true, created_at: now() }; d.courses.push(row); }
-        ['name', 'short_name', 'color', 'description', 'school_year', 'teacher_id', 'active'].forEach(function (k) {
+        ['name', 'short_name', 'color', 'description', 'school_year', 'teacher_id', 'active', 'pattern', 'welcome', 'sigla', 'banner_url', 'layout'].forEach(function (k) {
           if (c[k] !== undefined) row[k] = c[k];
         });
         save(d); return Promise.resolve(clone(row));
       }
       var r2 = {};
-      ['id', 'name', 'short_name', 'color', 'description', 'school_year', 'teacher_id', 'active'].forEach(function (k) {
+      ['id', 'name', 'short_name', 'color', 'description', 'school_year', 'teacher_id', 'active', 'pattern', 'welcome', 'sigla', 'banner_url', 'layout'].forEach(function (k) {
         if (c[k] !== undefined) r2[k] = c[k];
       });
       return supa().from('courses').upsert(r2).select().single().then(function (r) { return r.data; });
@@ -605,6 +650,218 @@
       }
       return supa().from('module_views').select('module_id').eq('student_id', me.id)
         .then(function (r) { return (r.data || []).map(function (v) { return v.module_id; }); });
+    },
+
+    /* ---------- foros ---------- */
+    forumPosts: function (moduleId) {
+      if (useDemo) {
+        var d = load();
+        return Promise.resolve(d.forum_posts.filter(function (p) { return p.module_id === moduleId; }).map(function (p) {
+          p = clone(p); var a = find(d, 'profiles', p.author_id);
+          p.author_name = a ? a.full_name : '?'; p.author_role = a ? a.role : '';
+          return p;
+        }).sort(function (a, b) { return a.created_at < b.created_at ? -1 : 1; }));
+      }
+      return supa().from('forum_posts').select('*, author:author_id(full_name,role)').eq('module_id', moduleId)
+        .order('created_at').then(function (r) {
+          return (r.data || []).map(function (p) {
+            p.author_name = p.author && p.author.full_name; p.author_role = p.author && p.author.role; return p;
+          });
+        });
+    },
+    postForum: function (moduleId, post) {
+      if (useDemo) {
+        var d = load();
+        var row = { id: uid(d, 'fp'), module_id: moduleId, parent_id: post.parent_id || null,
+          author_id: me.id, title: post.title || null, body: post.body, created_at: now() };
+        d.forum_posts.push(row); save(d); return Promise.resolve(clone(row));
+      }
+      return supa().from('forum_posts').insert({
+        module_id: moduleId, parent_id: post.parent_id || null,
+        title: post.title || null, body: post.body
+      }).select().single().then(function (r) { return r.data; });
+    },
+    deleteForumPost: function (id) {
+      if (useDemo) {
+        var d = load();
+        d.forum_posts = d.forum_posts.filter(function (p) { return p.id !== id && p.parent_id !== id; });
+        save(d); return Promise.resolve();
+      }
+      return supa().from('forum_posts').delete().eq('id', id);
+    },
+
+    /* ---------- banco de preguntas ---------- */
+    bankList: function (courseId) {
+      if (useDemo) {
+        var d = load();
+        return Promise.resolve(clone(d.bank.filter(function (q) { return q.course_id === courseId; })));
+      }
+      return supa().from('question_bank').select('*').eq('course_id', courseId).order('created_at')
+        .then(function (r) { return r.data || []; });
+    },
+    bankSave: function (courseId, q) {
+      if (useDemo) {
+        var d = load();
+        var row = { id: uid(d, 'bk'), course_id: courseId, type: q.type, prompt: q.prompt,
+          points: q.points || 1, payload: q.payload || {}, created_at: now() };
+        d.bank.push(row); save(d); return Promise.resolve(clone(row));
+      }
+      return supa().from('question_bank').insert({
+        course_id: courseId, type: q.type, prompt: q.prompt, points: q.points || 1, payload: q.payload || {}
+      }).select().single().then(function (r) { return r.data; });
+    },
+    bankDelete: function (id) {
+      if (useDemo) {
+        var d = load();
+        d.bank = d.bank.filter(function (q) { return q.id !== id; });
+        save(d); return Promise.resolve();
+      }
+      return supa().from('question_bank').delete().eq('id', id);
+    },
+
+    /* ---------- asistencia ---------- */
+    attendance: function (courseId, fecha) {
+      // fecha 'YYYY-MM-DD' o null = todo el curso
+      if (useDemo) {
+        var d = load();
+        var rows = d.attendance.filter(function (a) {
+          return a.course_id === courseId && (!fecha || a.date === fecha);
+        }).map(function (a) {
+          a = clone(a); var s = find(d, 'profiles', a.student_id);
+          a.student_name = s ? s.full_name : '?'; return a;
+        });
+        return Promise.resolve(rows);
+      }
+      var q = supa().from('attendance').select('*').eq('course_id', courseId);
+      if (fecha) q = q.eq('date', fecha);
+      return q.then(function (r) { return r.data || []; });
+    },
+    setAttendance: function (courseId, studentId, fecha, status) {
+      if (useDemo) {
+        var d = load();
+        var row = null;
+        d.attendance.forEach(function (a) {
+          if (a.course_id === courseId && a.student_id === studentId && a.date === fecha) row = a;
+        });
+        if (!row) { row = { id: uid(d, 'at'), course_id: courseId, student_id: studentId, date: fecha }; d.attendance.push(row); }
+        row.status = status; row.marked_by = me.id;
+        save(d); return Promise.resolve(clone(row));
+      }
+      return supa().from('attendance').upsert({
+        course_id: courseId, student_id: studentId, date: fecha, status: status, marked_by: me.id
+      }, { onConflict: 'course_id,student_id,date' }).select().single().then(function (r) { return r.data; });
+    },
+    myAttendancePct: function (courseId) {
+      if (useDemo) {
+        var d = load();
+        var rows = d.attendance.filter(function (a) { return a.course_id === courseId && a.student_id === me.id; });
+        if (!rows.length) return Promise.resolve(null);
+        var ok = rows.filter(function (a) { return a.status === 'P' || a.status === 'T'; }).length;
+        return Promise.resolve(Math.round(ok / rows.length * 100));
+      }
+      return supa().from('attendance').select('status').eq('course_id', courseId).eq('student_id', me.id)
+        .then(function (r) {
+          var rows = r.data || [];
+          if (!rows.length) return null;
+          var ok = rows.filter(function (a) { return a.status === 'P' || a.status === 'T'; }).length;
+          return Math.round(ok / rows.length * 100);
+        });
+    },
+
+    /* ---------- insignias (computadas) ---------- */
+    badges: function () {
+      if (useDemo) {
+        var d = load();
+        var att = d.quiz_attempts.filter(function (a) { return a.student_id === me.id; });
+        var subs = d.submissions.filter(function (s) { return s.student_id === me.id; });
+        var views = d.module_views.filter(function (v) { return v.student_id === me.id; });
+        var posts = d.forum_posts.filter(function (p) { return p.author_id === me.id; });
+        var best = att.reduce(function (b, a) { return Math.max(b, (a.score || 0) / Math.max(1, a.max_score)); }, 0);
+        var perfect = att.some(function (a) { return a.max_score && a.score === a.max_score; });
+        var aprobado = att.some(function (a) { var m = find(d, 'modules', a.module_id); var p = (m && m.content && m.content.pass_grade) || 6; var mx = (m && m.content && m.content.max_grade) || 10; return a.max_score && (a.score / a.max_score * mx) >= p; });
+        var aTiempo = subs.some(function (s) { var m = find(d, 'modules', s.module_id); return m && m.due_date && s.submitted_at <= m.due_date; });
+        var defs = [
+          { id: 'intento',  icon: 'quiz',    nombre: 'Primer intento',    desc: 'Rendiste tu primer cuestionario',        ok: att.length >= 1 },
+          { id: 'perfecto', icon: 'sparkle', nombre: 'Puntaje perfecto',  desc: '100% en un cuestionario',                ok: perfect },
+          { id: 'aprobada', icon: 'check',   nombre: 'Aprobada',          desc: 'Superaste la nota de aprobación',        ok: aprobado },
+          { id: 'puntual',  icon: 'clock',   nombre: 'Puntual',           desc: 'Entregaste una tarea antes del vencimiento', ok: aTiempo },
+          { id: 'entregas', icon: 'task',    nombre: 'Responsable',       desc: '3 o más tareas entregadas',              ok: subs.length >= 3 },
+          { id: 'explora',  icon: 'eye',     nombre: 'Curiosa',           desc: 'Abriste 5+ materiales',                  ok: views.length >= 5 },
+          { id: 'forera',   icon: 'forum',   nombre: 'Participa',         desc: 'Publicaste en un foro',                  ok: posts.length >= 1 },
+          { id: 'racha',    icon: 'flame',   nombre: 'En racha',          desc: '3+ intentos de cuestionarios',           ok: att.length >= 3 },
+          { id: 'crack',    icon: 'award',   nombre: 'Crack',             desc: 'Promedio de cuestionarios ≥ 90%',        ok: att.length >= 2 && best >= 0.9 }
+        ];
+        return Promise.resolve(defs);
+      }
+      return Promise.resolve([]); // supabase: mismo cómputo en cliente (V2)
+    },
+
+    /* ---------- notificaciones (campanita) ---------- */
+    notifications: function () {
+      if (useDemo) {
+        var d = load();
+        var seen = localStorage.getItem('zeiro_seen_' + me.id) || '2000-01-01T00:00:00Z';
+        var items = [];
+        var myCourseIds = d.courses.filter(function (c) {
+          if (me.role === 'admin') return true;
+          if (me.role === 'docente') return c.teacher_id === me.id;
+          return d.enrollments.some(function (e) { return e.course_id === c.id && e.student_id === me.id; });
+        }).map(function (c) { return c.id; });
+        d.announcements.forEach(function (a) {
+          if (a.created_at > seen && a.author_id !== me.id &&
+              (a.course_id === null || myCourseIds.indexOf(a.course_id) >= 0)) {
+            items.push({ tipo: 'comunicado', icon: 'mega', titulo: a.title, extra: 'Nuevo comunicado', hash: '#/comunicados', fecha: a.created_at });
+          }
+        });
+        d.grades.forEach(function (g) {
+          if (g.student_id === me.id && g.updated_at > seen) {
+            var m = g.module_id ? find(d, 'modules', g.module_id) : null;
+            var c = find(d, 'courses', g.course_id);
+            items.push({ tipo: 'nota', icon: 'star', titulo: 'Nota ' + g.grade + ' en ' + (m ? m.title : g.label || 'actividad'),
+              extra: c ? c.short_name || c.name : '', hash: '#/mis-notas', fecha: g.updated_at });
+          }
+        });
+        if (me.role !== 'estudiante') {
+          d.submissions.forEach(function (s) {
+            if (s.submitted_at > seen && s.grade == null) {
+              var m = find(d, 'modules', s.module_id);
+              if (m && (me.role === 'admin' || find(d, 'courses', m.course_id).teacher_id === me.id)) {
+                var st = find(d, 'profiles', s.student_id);
+                items.push({ tipo: 'entrega', icon: 'task', titulo: (st ? st.full_name : '?') + ' entregó ' + m.title,
+                  extra: 'Por corregir', hash: '#/corregir-entregas/' + m.id, fecha: s.submitted_at });
+              }
+            }
+          });
+          d.quiz_attempts.forEach(function (a) {
+            if (a.needs_review && a.finished_at > seen) {
+              var m = find(d, 'modules', a.module_id);
+              if (m && (me.role === 'admin' || find(d, 'courses', m.course_id).teacher_id === me.id)) {
+                var st2 = find(d, 'profiles', a.student_id);
+                items.push({ tipo: 'intento', icon: 'quiz', titulo: (st2 ? st2.full_name : '?') + ' rindió ' + m.title,
+                  extra: 'Revisar abiertas', hash: '#/correccion-quiz/' + m.id, fecha: a.finished_at });
+              }
+            }
+          });
+        }
+        items.sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; });
+        return Promise.resolve(items.slice(0, 15));
+      }
+      return Promise.resolve([]);
+    },
+    markNotifsSeen: function () {
+      if (useDemo) { localStorage.setItem('zeiro_seen_' + me.id, now()); return Promise.resolve(); }
+      return Promise.resolve();
+    },
+
+    /* ---------- usuarios ---------- */
+    deleteUser: function (id) {
+      if (useDemo) {
+        var d = load();
+        d.profiles = d.profiles.filter(function (p) { return p.id !== id; });
+        d.enrollments = d.enrollments.filter(function (e) { return e.student_id !== id; });
+        save(d); return Promise.resolve();
+      }
+      return Promise.reject(new Error('Borrar usuarios reales: Supabase → Authentication'));
     }
   };
 

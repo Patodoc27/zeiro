@@ -31,6 +31,34 @@
     document.body.appendChild(veil);
     return veil;
   };
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      var veils = document.querySelectorAll('.veil');
+      if (veils.length) veils[veils.length - 1].remove();
+      var zp = document.querySelector('.zpanel');
+      if (zp) zp.remove();
+    }
+  });
+
+  /* timers globales: se cancelan al cambiar de pantalla */
+  Z._timers = [];
+  Z.regTimer = function (iv) { Z._timers.push(iv); return iv; };
+  Z.clearTimers = function () { Z._timers.forEach(clearInterval); Z._timers = []; };
+
+  /* markdown lite: **negrita**, *cursiva*, saltos de línea, listas con - */
+  Z.md = function (txt) {
+    var t = esc(txt || '');
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+         .replace(/\*([^*\n]+)\*/g, '<i>$1</i>');
+    var partes = t.split(/\n{2,}/);
+    return '<div class="md">' + partes.map(function (p) {
+      var lineas = p.split('\n');
+      if (lineas.every(function (l) { return /^\s*-\s+/.test(l); })) {
+        return '<ul>' + lineas.map(function (l) { return '<li>' + l.replace(/^\s*-\s+/, '') + '</li>'; }).join('') + '</ul>';
+      }
+      return '<p>' + lineas.join('<br>') + '</p>';
+    }).join('') + '</div>';
+  };
   Z.confirm = function (msg, onOk) {
     var v = Z.modal('<h2>¿Confirmar?</h2><p>' + esc(msg) + '</p>' +
       '<div class="fila" style="justify-content:flex-end;margin-top:16px">' +
@@ -47,7 +75,7 @@
       '<div class="loginwrap"><div class="logincard">' +
       '<div class="loginlat">' + Z_LOGO +
       '<h1>Zeiro</h1><p>' + esc(CONFIG.TAGLINE) + '. Materiales, tareas, cuestionarios y notas — simple para docentes y estudiantes.</p>' +
-      '<div class="rayas"></div></div>' +
+      '<div class="rayas"></div>' + Z_ZEBRA('saludo') + '</div>' +
       '<div class="loginform"><h2 style="margin-bottom:4px">Ingresar</h2>' +
       (demo
         ? '<p style="color:var(--neg-300);font-size:13px;margin-top:4px">Modo demostración — elegí un rol para recorrer la plataforma:</p>' +
@@ -78,7 +106,7 @@
 
   /* ---------------- SHELL ---------------- */
   var NAV = {
-    estudiante: [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Mis cursos'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados'], ['#/mis-notas', 'star', 'Mis notas']],
+    estudiante: [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Mis cursos'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados'], ['#/mis-notas', 'star', 'Mis notas'], ['#/mis-logros', 'award', 'Mis logros']],
     docente:    [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Mis cursos'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados']],
     admin:      [['#/home', 'home', 'Inicio'], ['#/mis-cursos', 'book', 'Cursos'], ['#/agenda', 'cal', 'Agenda'], ['#/comunicados', 'mega', 'Comunicados'], ['#/admin/usuarios', 'users', 'Usuarios'], ['#/admin/cursos', 'gear', 'Gestión']]
   };
@@ -97,9 +125,39 @@
       '<div class="pie"><div class="quien"><div class="avatar">' + iniciales + '</div>' +
       '<div style="flex:1;min-width:0"><b>' + esc(me.full_name) + '</b><small>' + esc(me.role) + '</small></div>' +
       '<button class="iconbtn" id="z_salir" title="Salir" style="color:#B9B3DA">' + ZI('out') + '</button></div></div>' +
-      '</aside><main class="main" id="z_main"></main></div>';
+      '</aside><main class="main" id="z_main"></main>' +
+      '<button class="zbell" id="z_bell" title="Notificaciones">' + ZI('bell') + '</button></div>';
     root.querySelector('#z_salir').onclick = function () {
       Z.api.logout().then(function () { location.hash = ''; render(); });
+    };
+    var bell = root.querySelector('#z_bell');
+    Z.api.notifications().then(function (items) {
+      if (items.length) bell.insertAdjacentHTML('beforeend', '<span class="nuevo">' + items.length + '</span>');
+    });
+    bell.onclick = function () {
+      var viejo = document.querySelector('.zpanel');
+      if (viejo) { viejo.remove(); return; }
+      Z.api.notifications().then(function (items) {
+        var p = document.createElement('div');
+        p.className = 'zpanel';
+        p.innerHTML = '<h4>Notificaciones</h4>' + (items.length ? items.map(function (n) {
+          return '<a class="notif" href="' + n.hash + '"><span class="nico">' + ZI(n.icon) + '</span>' +
+            '<span style="flex:1;min-width:0"><b>' + esc(n.titulo) + '</b><small>' + esc(n.extra || '') + '</small></span>' +
+            '<span class="cuando">' + Z.fmtFecha(n.fecha) + '</span></a>';
+        }).join('') : '<div class="vacio" style="padding:20px">' + Z_ZEBRA('pensar') + '<p>Nada nuevo por ahora.</p></div>');
+        document.body.appendChild(p);
+        p.querySelectorAll('a.notif').forEach(function (a) {
+          a.addEventListener('click', function () { p.remove(); });
+        });
+        Z.api.markNotifsSeen();
+        var dot = bell.querySelector('.nuevo');
+        if (dot) dot.remove();
+        setTimeout(function () {
+          document.addEventListener('click', function cerrar(ev) {
+            if (!p.contains(ev.target) && ev.target !== bell && !bell.contains(ev.target)) { p.remove(); document.removeEventListener('click', cerrar); }
+          });
+        }, 10);
+      });
     };
     document.getElementById('z_main').innerHTML = content;
     return document.getElementById('z_main');
@@ -112,25 +170,36 @@
     var h = location.hash || '#/home';
     if (!me) { renderLogin(); return; }
     if (!Z.views) { setTimeout(render, 60); return; }
+    Z.clearTimers();
+    var viejo = document.querySelector('.zpanel');
+    if (viejo) viejo.remove();
 
     var partes = h.replace(/^#\//, '').split('/');
     var v = Z.views;
-    if (partes[0] === 'curso' && partes[2] === 'notas') v.notas(partes[1]);
-    else if (partes[0] === 'curso' && partes[2] === 'asistencia') v.curso(partes[1]);
-    else if (partes[0] === 'curso') v.curso(partes[1]);
-    else if (partes[0] === 'modulo') v.modulo(partes[1]);
-    else if (partes[0] === 'quiz') v.tomarQuiz(partes[1]);
-    else if (partes[0] === 'correccion-quiz') v.corregirQuiz(partes[1]);
-    else if (partes[0] === 'entrega') v.entrega(partes[1]);
-    else if (partes[0] === 'corregir-entregas') v.corregirEntregas(partes[1]);
-    else if (partes[0] === 'editor-quiz') v.editorQuiz(partes[1]);
-    else if (partes[0] === 'agenda') v.agenda();
-    else if (partes[0] === 'comunicados') v.comunicados();
-    else if (partes[0] === 'mis-cursos') v.misCursos();
-    else if (partes[0] === 'mis-notas') v.misNotas();
-    else if (partes[0] === 'admin' && partes[1] === 'usuarios') v.adminUsuarios();
-    else if (partes[0] === 'admin' && partes[1] === 'cursos') v.adminCursos();
-    else v.home();
+    try {
+      if (partes[0] === 'curso' && partes[2] === 'notas') v.notas(partes[1]);
+      else if (partes[0] === 'curso' && partes[2] === 'asistencia') v.asistencia(partes[1]);
+      else if (partes[0] === 'curso') v.curso(partes[1]);
+      else if (partes[0] === 'modulo') v.modulo(partes[1]);
+      else if (partes[0] === 'quiz') v.tomarQuiz(partes[1]);
+      else if (partes[0] === 'prev-quiz') v.previsualizarQuiz(partes[1]);
+      else if (partes[0] === 'correccion-quiz') v.corregirQuiz(partes[1]);
+      else if (partes[0] === 'entrega') v.entrega(partes[1]);
+      else if (partes[0] === 'corregir-entregas') v.corregirEntregas(partes[1]);
+      else if (partes[0] === 'editor-quiz') v.editorQuiz(partes[1]);
+      else if (partes[0] === 'foro') v.foro(partes[1]);
+      else if (partes[0] === 'agenda') v.agenda();
+      else if (partes[0] === 'comunicados') v.comunicados();
+      else if (partes[0] === 'mis-cursos') v.misCursos();
+      else if (partes[0] === 'mis-notas') v.misNotas();
+      else if (partes[0] === 'mis-logros') v.misLogros();
+      else if (partes[0] === 'admin' && partes[1] === 'usuarios') v.adminUsuarios();
+      else if (partes[0] === 'admin' && partes[1] === 'cursos') v.adminCursos();
+      else v.home();
+    } catch (err) {
+      Z.shell('<div class="card vacio">' + Z_ZEBRA('pensar') +
+        '<p>Ups, algo se trabó en esta pantalla.</p><a class="btn" href="#/home">Volver al inicio</a></div>', '#/home');
+    }
   }
 
   window.addEventListener('hashchange', render);

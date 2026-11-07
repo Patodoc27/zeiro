@@ -208,4 +208,221 @@ label{font-size:12.5px;font-weight:600;color:var(--neg-500);display:block;margin
   .loginlat{display:none}
 }
 @media (max-width:560px){.gr2,.gr3,.gr4{grid-template-columns:1fr}}
-@media print{.side,.topbar .btn,.topbar .iconbtn,.no-print{display:none!important}.main{margin:0;padding:0}}
+@media print{.side,.topbar .btn,.topbar .iconbtn,.no-print,.zbell,.zpanel{display:none!important}.main{margin:0;padding:0}}
+
+/* ============================================================
+   ZEIRO v2 · Diseño propio para secundario
+   ============================================================ */
+
+/* animación de entrada suave */
+@keyframes zUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes zPop{0%{transform:scale(.6)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes zFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.main>*{animation:zUp .3s ease both}
+.main>*:nth-child(2){animation-delay:.04s}.main>*:nth-child(3){animation-delay:.08s}.main>*:nth-child(4){animation-delay:.12s}
+
+/* ---------- hero de inicio ---------- */
+.hero{position:relative;overflow:hidden;border-radius:20px;color:#fff;margin-bottom:20px;
+  background:linear-gradient(115deg,var(--neg-900) 0%,var(--vio-900) 45%,var(--vio-700) 75%,var(--azu-600) 110%);
+  box-shadow:0 14px 44px rgba(59,20,120,.28)}
+.hero::before{content:"";position:absolute;right:-40px;top:-60px;width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(20,184,166,.35),transparent 65%)}
+.hero::after{content:"";position:absolute;left:0;bottom:0;right:0;height:8px;
+  background:repeating-linear-gradient(-45deg,#fff 0 10px,var(--neg-900) 10px 20px);opacity:.9}
+.hero .hin{position:relative;z-index:1;display:flex;align-items:center;gap:18px;padding:24px 28px 30px}
+.hero .hizq{flex:1;min-width:0}
+.hero h1{font-size:27px;color:#fff;letter-spacing:-.4px}
+.hero .hsub{color:#C7C3EA;font-size:13.5px;margin-top:4px}
+.hero .hchips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.hero .hchip{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.13);backdrop-filter:blur(4px);
+  border:1px solid rgba(255,255,255,.22);color:#fff;border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:700}
+.hero .hchip .ic{width:15px;height:15px;color:var(--tur-300)}
+.hero .ziro{width:86px;height:99px;flex:none;filter:drop-shadow(0 8px 16px rgba(0,0,0,.35));animation:zFloat 4s ease-in-out infinite}
+.hero .ziro.big{width:110px;height:127px}
+
+/* ---------- tarjetas de curso con identidad ---------- */
+.ctile{position:relative;display:block;text-decoration:none;color:inherit;border-radius:18px;overflow:hidden;
+  background:var(--blanco);border:1px solid var(--linea);box-shadow:var(--sombra);transition:.18s}
+.ctile:hover{transform:translateY(-3px);text-decoration:none;box-shadow:0 8px 10px rgba(12,12,20,.07),0 18px 40px rgba(59,20,120,.16)}
+.ctile .banda{height:64px;position:relative;display:flex;align-items:flex-end;padding:0 16px 8px}
+.ctile .banda .sigla{font-weight:800;color:#fff;font-size:13px;letter-spacing:.6px;text-shadow:0 1px 3px rgba(0,0,0,.3)}
+.ctile .banda::before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(-45deg,rgba(255,255,255,.16) 0 9px,transparent 9px 20px)}
+.ctile .cuerpo{padding:12px 16px 14px}
+.ctile h3{font-size:16.5px;color:var(--neg-900)}
+.ctile p{margin:3px 0 0;color:var(--neg-300);font-size:12.8px}
+.ctile .meta{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.ctile .prog{height:7px;border-radius:99px;background:var(--papel);margin-top:12px;overflow:hidden}
+.ctile .prog i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--tur-500),var(--azu-400));transition:width .5s ease}
+.ctile .prog-t{font-size:11px;color:var(--neg-300);margin-top:5px;font-weight:600}
+.ctile .chevron{position:absolute;right:14px;bottom:14px;color:var(--neg-150)}
+
+/* ---------- mini listas ---------- */
+.mini-item{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:11px;text-decoration:none;color:inherit}
+.mini-item:hover{background:var(--vio-50);text-decoration:none}
+.mini-item .dot{width:10px;height:10px;border-radius:4px;flex:none}
+.mini-item .mi-t{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--neg-700);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-item .mi-f{font-size:11.5px;color:var(--neg-300);font-weight:600;white-space:nowrap}
+
+/* ---------- insignias ---------- */
+.insignia{text-align:center;padding:18px 10px 14px;border-radius:16px;border:1.5px solid var(--linea);
+  background:var(--blanco);transition:.16s;position:relative}
+.insignia.ganada{border-color:var(--tur-300);background:linear-gradient(180deg,var(--tur-50),#fff)}
+.insignia.ganada:hover{transform:translateY(-3px) rotate(-1deg);border-color:var(--tur-500)}
+.insignia.locked{opacity:.5;filter:grayscale(.85)}
+.insignia .med{width:56px;height:56px;margin:0 auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--vio-500),var(--azu-600));color:#fff;box-shadow:0 6px 14px rgba(91,33,182,.3)}
+.insignia.locked .med{background:var(--neg-150);box-shadow:none;color:var(--neg-300)}
+.insignia .med .ic{width:26px;height:26px}
+.insignia b{display:block;font-size:13px;color:var(--neg-900)}
+.insignia small{color:var(--neg-300);font-size:11.5px;line-height:1.3;display:block;margin-top:3px}
+.insignia .stick{position:absolute;top:-8px;right:-6px;background:var(--tur-500);color:var(--neg-900);
+  font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;transform:rotate(6deg);box-shadow:0 3px 8px rgba(20,184,166,.4)}
+
+/* ---------- campanita ---------- */
+.zbell{position:fixed;top:16px;right:22px;z-index:40;width:42px;height:42px;border-radius:14px;border:1px solid var(--linea);
+  background:var(--blanco);box-shadow:var(--sombra);cursor:pointer;color:var(--vio-700);display:flex;align-items:center;justify-content:center}
+.zbell:hover{background:var(--vio-50)}
+.zbell .ic{width:19px;height:19px}
+.zbell .nuevo{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;border-radius:99px;background:var(--malo);
+  color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px;
+  box-shadow:0 2px 6px rgba(180,35,78,.5)}
+.zpanel{position:fixed;top:66px;right:22px;z-index:50;width:340px;max-height:70vh;overflow-y:auto;
+  background:var(--blanco);border:1px solid var(--linea);border-radius:16px;box-shadow:0 18px 50px rgba(12,12,20,.22);padding:8px}
+.zpanel h4{padding:8px 10px 4px;font-size:13px;color:var(--neg-300);text-transform:uppercase;letter-spacing:.6px}
+.notif{display:flex;gap:11px;align-items:flex-start;padding:10px;border-radius:11px;text-decoration:none;color:inherit}
+.notif:hover{background:var(--vio-50);text-decoration:none}
+.notif .nico{width:34px;height:34px;flex:none;border-radius:11px;background:var(--vio-100);color:var(--vio-700);
+  display:flex;align-items:center;justify-content:center}
+.notif .nico .ic{width:17px;height:17px}
+.notif b{font-size:13px;color:var(--neg-700);display:block}
+.notif small{color:var(--neg-300);font-size:11.5px}
+.notif .cuando{margin-left:auto;font-size:10.5px;color:var(--neg-150);white-space:nowrap;font-weight:700}
+
+/* ---------- foro ---------- */
+.hilo{background:var(--blanco);border:1px solid var(--linea);border-radius:14px;padding:14px 16px;margin-bottom:10px;transition:.14s}
+a.hilo{display:block}
+a.hilo:hover{border-color:var(--vio-300);text-decoration:none;box-shadow:var(--sombra)}
+.hilo .ht{display:flex;gap:10px;align-items:center}
+.hilo .ht b{font-size:15px;color:var(--neg-900)}
+.hilo .autor{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.hilo .autor .av{width:30px;height:30px;border-radius:50%;background:var(--vio-100);color:var(--vio-700);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
+.hilo .autor .av.doc{background:var(--tur-100);color:var(--tur-700)}
+.hilo .autor small{color:var(--neg-300);font-size:11.5px}
+.resp{margin:12px 0 0 24px;padding:12px 14px;border-left:3px solid var(--vio-300);background:var(--vio-50);
+  border-radius:0 12px 12px 0;font-size:13.5px}
+.resp .autor .av{width:26px;height:26px;font-size:11px}
+.resp p{margin:4px 0 0;white-space:pre-wrap}
+
+/* ---------- asistencia ---------- */
+.ast3{display:inline-flex;border:1.5px solid var(--linea);border-radius:10px;overflow:hidden}
+.ast3 button{border:none;background:var(--blanco);padding:7px 13px;cursor:pointer;font-weight:800;font-size:12.5px;color:var(--neg-300)}
+.ast3 button.on-p{background:var(--tur-500);color:var(--neg-900)}
+.ast3 button.on-t{background:var(--azu-400);color:#fff}
+.ast3 button.on-a{background:var(--malo);color:#fff}
+.ast-pct{font-weight:800;font-size:13px}
+.ast-pct.ok{color:var(--tur-700)}.ast-pct.med{color:var(--azu-600)}.ast-pct.low{color:var(--malo)}
+
+/* ---------- markdown lite ---------- */
+.md p{margin:0 0 10px}.md p:last-child{margin-bottom:0}
+.md h4{margin:14px 0 6px;color:var(--vio-700);font-size:14.5px}
+.md ul,.md ol{margin:6px 0 10px;padding-left:22px}
+.md li{margin-bottom:4px}
+.md blockquote{border-left:3px solid var(--tur-500);padding:4px 12px;margin:8px 0;background:var(--tur-50);border-radius:0 8px 8px 0}
+.md code{background:var(--vio-100);color:var(--vio-700);border-radius:5px;padding:1px 6px;font-size:13px}
+
+/* ---------- vacíos con mascota ---------- */
+.vacio .ziro{width:74px;height:85px;margin-bottom:6px;opacity:.9}
+.vacio p{font-size:14px;font-weight:600}
+
+/* ---------- mejoras sidebar ---------- */
+.side nav{position:relative}
+.side nav a{position:relative}
+.side nav a.on{box-shadow:inset 3px 0 0 var(--tur-500)}
+.side::after{content:"";position:absolute;left:0;right:0;bottom:96px;height:34px;pointer-events:none;
+  background:repeating-linear-gradient(-45deg,rgba(255,255,255,.05) 0 7px,transparent 7px 16px)}
+.topbar{padding-right:56px} /* espacio para la campanita */
+
+/* ---------- quiz ---------- */
+.qprog{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--azu-800);
+  background:var(--azu-100);border-radius:999px;padding:5px 12px}
+.preg.respondida{border-color:var(--tur-300)}
+.preg.respondida .enun::after{content:"✓";margin-left:8px;color:var(--tur-500);font-weight:800}
+.draft-banner{display:flex;gap:10px;align-items:center;background:var(--azu-50);border:1.5px dashed var(--azu-400);
+  color:var(--azu-800);border-radius:12px;padding:10px 14px;margin:12px 0;font-size:13px;font-weight:600}
+.opc input{accent-color:var(--vio-500)}
+.opc.sel{border-color:var(--vio-500);background:var(--vio-100)}
+.timer{display:inline-flex;align-items:center;gap:7px}
+.timer .ic{width:15px;height:15px}
+
+/* ---------- banco/editor ---------- */
+.bank-item{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--linea);border-radius:11px;margin-bottom:8px}
+.bank-item .binfo{flex:1;min-width:0}
+.bank-item .binfo b{font-size:13px;display:block}
+.bank-item .binfo small{color:var(--neg-300);font-size:11.5px}
+
+/* ---------- login ---------- */
+.loginlat{position:relative;overflow:hidden}
+.loginlat .ziro{position:absolute;right:-12px;bottom:30px;width:110px;height:127px;animation:zFloat 5s ease-in-out infinite}
+.loginlat .rayas{position:relative;z-index:1}
+.logincard{animation:zUp .4s ease both}
+.rolbtn{transition:.15s}
+.rolbtn:hover{transform:translateX(4px)}
+
+/* ---------- misc ---------- */
+.topbar .acciones{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.tag-tipo{font-size:10px}
+.main h1{letter-spacing:-.3px}
+.topbar{padding-right:64px}
+@media (max-width:899px){.zbell{top:10px;right:10px}.topbar{padding-right:54px}}
+
+/* ---------- aula personalizable ---------- */
+.aula-hero{position:relative;border-radius:18px;overflow:hidden;margin-bottom:18px;color:#fff;
+  box-shadow:0 10px 30px rgba(28,16,66,.28);display:flex;align-items:stretch;min-height:120px}
+.aula-hero .pat{position:absolute;inset:0;pointer-events:none}
+.aula-hero .ah-txt{position:relative;padding:20px 24px;flex:1;min-width:0}
+.aula-hero .ah-txt h1{margin:8px 0 4px;font-size:26px;letter-spacing:.2px}
+.aula-hero .ah-txt p{margin:0;opacity:.85;font-size:13.5px}
+.aula-hero .sigla{display:inline-block;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.65);
+  color:#fff;font-weight:900;font-size:13px;letter-spacing:1.5px;padding:3px 10px;border-radius:8px}
+.aula-hero .ah-wel{margin-top:10px;background:rgba(255,255,255,.16);border-left:4px solid rgba(255,255,255,.7);
+  padding:8px 12px;border-radius:0 10px 10px 0;font-size:13.5px;max-width:640px}
+.aula-hero .ah-acts{position:relative;display:flex;flex-direction:column;gap:8px;justify-content:center;
+  padding:16px 20px;background:rgba(0,0,0,.18)}
+.btn.blanco{background:rgba(255,255,255,.92);color:var(--neg-700)}
+.btn.blanco:hover{background:#fff;transform:translateY(-1px)}
+.pat-liso{background:transparent}
+.pat-rayas{background:repeating-linear-gradient(-45deg,rgba(255,255,255,.16) 0 10px,transparent 10px 22px)}
+.pat-puntos{background-image:radial-gradient(rgba(255,255,255,.32) 2.2px,transparent 2.4px);background-size:22px 22px}
+.pat-ondas{background:repeating-radial-gradient(circle at -10% 120%,rgba(255,255,255,.14) 0 10px,transparent 10px 26px)}
+.ctile .banda{position:relative;overflow:hidden}
+.ctile .banda .sigla{background:rgba(0,0,0,.26);border:1.5px solid rgba(255,255,255,.6);color:#fff;
+  font-weight:900;font-size:12px;letter-spacing:1px;padding:2px 8px;border-radius:7px}
+.aula-prev{position:relative;border-radius:14px;overflow:hidden;min-height:110px;color:#fff;display:flex}
+.aula-prev .pat{position:absolute;inset:0;pointer-events:none}
+.aula-prev .ah-txt{position:relative;padding:16px 18px}
+.aula-prev .ah-txt h1{margin:6px 0 2px;font-size:20px}
+.aula-prev .ah-txt p{margin:0;font-size:13px;opacity:.9}
+.aula-prev .sigla{display:inline-block;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.65);
+  color:#fff;font-weight:900;font-size:12px;letter-spacing:1.5px;padding:2px 9px;border-radius:7px}
+.patopt{border:1.5px solid var(--linea);background:#fff;border-radius:10px;padding:8px 14px;
+  font-size:12.5px;font-weight:600;color:var(--neg-500);cursor:pointer}
+.patopt.on{border-color:var(--vio-500);background:var(--vio-50);color:var(--vio-700)}
+.hilo .resp{position:relative}
+
+/* ---------- diseño instruccional ---------- */
+.solapas{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.solapa{border:none;background:#fff;border-radius:12px;padding:10px 18px;font-weight:700;font-size:13.5px;
+  color:var(--neg-500);cursor:pointer;box-shadow:0 1px 3px rgba(28,16,66,.08);border-bottom:3px solid transparent;
+  font-family:var(--fuente)}
+.solapa:hover{transform:translateY(-1px)}
+.solapa.on{color:var(--vio-700);border-bottom-color:var(--sol,var(--vio-500));background:var(--vio-50)}
+.etiq{display:inline-block;color:#fff;font-size:10px;font-weight:800;letter-spacing:.6px;
+  text-transform:uppercase;padding:2px 9px;border-radius:99px;vertical-align:2px}
+.embed{width:100%;min-height:280px;border:1.5px solid var(--linea);border-radius:12px;background:#fff;margin-top:8px}
+.embed.vid{min-height:auto;max-height:420px;background:#000}
+.embver summary{cursor:pointer;font-size:11.5px;color:var(--vio-700);font-weight:700;display:flex;align-items:center;gap:4px}
+.embver .embed{min-height:180px}
+.seccion>header{border-radius:10px;padding:7px 10px;margin:-4px -10px 6px;align-items:center}

@@ -38,6 +38,11 @@ create table if not exists public.courses (
   name        text not null,                 -- "Biología · 5° 1°"
   short_name  text,                          -- "BIO 5-1"
   color       text default '#0E7C66',
+  pattern     text default 'liso' check (pattern in ('liso','rayas','puntos','ondas')), -- portada del aula
+  sigla       text,                          -- letras grandes en la banda/portada
+  welcome     text,                          -- mensaje de bienvenida del aula
+  banner_url  text,                          -- imagen de portada del aula (URL o data URL)
+  layout      text default 'lista' check (layout in ('lista','solapas')), -- organización del aula
   description text,
   school_year text,                          -- "2026"
   teacher_id  uuid references public.profiles(id) on delete set null,
@@ -65,6 +70,8 @@ create table if not exists public.sections (
   id         uuid primary key default gen_random_uuid(),
   course_id  uuid not null references public.courses(id) on delete cascade,
   title      text not null,                  -- "Unidad 1 · La célula"
+  color      text,                           -- color de acento de la unidad
+  img        text,                           -- imagen de fondo del encabezado (URL o data URL)
   position   int  not null default 0
 );
 
@@ -74,16 +81,18 @@ create table if not exists public.modules (
   id          uuid primary key default gen_random_uuid(),
   course_id   uuid not null references public.courses(id) on delete cascade,
   section_id  uuid references public.sections(id) on delete cascade,
-  type        text not null check (type in ('page','file','link','quiz','assignment','announcement')),
+  type        text not null check (type in ('page','file','link','quiz','assignment','announcement','forum','html')),
   title       text not null,
   content     jsonb not null default '{}'::jsonb,
   -- page: {body} · file: {file_url, file_name} · link: {url}
   -- quiz: {time_limit_min, attempts_allowed, shuffle, pass_grade, open_at, close_at}
   -- assignment: {instructions, max_grade, due_date, allow_late}
-  -- announcement: {body}
+  -- announcement: {body} · forum: {description}
   position    int  not null default 0,
   visible     boolean not null default true,
   due_date    timestamptz,
+  available_from  timestamptz, -- publicación programada (null = ya)
+  available_until timestamptz, -- cierre programado (null = no cierra)
   created_at  timestamptz not null default now()
 );
 
@@ -114,10 +123,47 @@ create table if not exists public.quiz_attempts (
   -- answers: {question_id: respuesta} — respuesta según tipo:
   -- mcq:[íds] tf:bool short:text match:{left:text->right:text} essay:text
   answers     jsonb not null default '{}'::jsonb,
-  score       numeric,          -- puntos obtenidos (auto-calculado)
+  score       numeric,          -- puntos totales (auto + ensayos)
+  auto_score  numeric,          -- puntos de corrección automática
+  essay_scores jsonb not null default '{}'::jsonb, -- {question_id: puntos}
   max_score   numeric,          -- puntos posibles
   needs_review boolean not null default false, -- tiene essay pendiente
   status      text not null default 'open' check (status in ('open','submitted','graded'))
+);
+
+-- ============ FOROS ============
+create table if not exists public.forum_posts (
+  id          uuid primary key default gen_random_uuid(),
+  module_id   uuid not null references public.modules(id) on delete cascade,
+  parent_id   uuid references public.forum_posts(id) on delete cascade, -- null = tema nuevo
+  author_id   uuid not null references public.profiles(id) on delete cascade,
+  title       text,        -- solo en temas
+  body        text not null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists forum_posts_module_idx on public.forum_posts (module_id, created_at);
+
+-- ============ BANCO DE PREGUNTAS ============
+create table if not exists public.question_bank (
+  id          uuid primary key default gen_random_uuid(),
+  course_id   uuid not null references public.courses(id) on delete cascade,
+  type        text not null check (type in ('mcq','tf','short','match','essay')),
+  prompt      text not null,
+  points      numeric not null default 1,
+  payload     jsonb not null default '{}'::jsonb, -- mismo formato que questions.payload
+  created_by  uuid references public.profiles(id) on delete set null,
+  created_at  timestamptz not null default now()
+);
+
+-- ============ ASISTENCIA ============
+create table if not exists public.attendance (
+  id          uuid primary key default gen_random_uuid(),
+  course_id   uuid not null references public.courses(id) on delete cascade,
+  student_id  uuid not null references public.profiles(id) on delete cascade,
+  date        date not null,
+  status      text not null check (status in ('P','T','A')), -- presente, tarde, ausente
+  marked_by   uuid references public.profiles(id) on delete set null,
+  unique (course_id, student_id, date)
 );
 
 -- ============ TAREAS ============
@@ -127,6 +173,7 @@ create table if not exists public.submissions (
   student_id    uuid not null references public.profiles(id) on delete cascade,
   body          text,
   file_url      text,
+  embed_html    text,                          -- HTML/video incrustado por el estudiante
   submitted_at  timestamptz not null default now(),
   grade         numeric,
   feedback      text,

@@ -72,7 +72,7 @@
   }
 
   /* ---------- revisión (alumno ve su corrección) ---------- */
-  function renderReview(q, ans) {
+  function renderReview(q, ans, pts) {
     var p = q.payload || {};
     var h = '<div class="preg"><div class="enun">' + esc(q.prompt) + '<span class="pts">' + q.points + ' pts</span></div>';
     if (q.type === 'mcq') {
@@ -100,15 +100,19 @@
       });
     } else {
       h += '<p><b>Tu respuesta:</b></p><div class="card" style="box-shadow:none">' + esc(ans || '—') + '</div>' +
-        '<p style="color:var(--neg-300);font-size:12.5px">La corrige la docente.</p>';
+        (pts != null
+          ? '<p style="font-weight:700;color:var(--tur-700);font-size:13px;margin-top:8px">Puntaje: ' + pts + ' / ' + q.points + ' pts</p>'
+          : '<p style="color:var(--neg-300);font-size:12.5px">La corrige la docente.</p>');
     }
     return h + '</div>';
   }
 
   /* ---------- editor de una pregunta ---------- */
+  var QN = 0; // ids únicos para radio groups de preguntas nuevas
   function editorQ(q) {
     q = q || { type: 'mcq', prompt: '', points: 1, payload: { choices: ['', ''], correct: [0] } };
     var p = q.payload || {};
+    var radioname = 'corr_' + (q.id || ('n' + (++QN)));
     var h = '<div class="qedit" data-qid="' + (q.id || '') + '">';
     h += '<div class="entre"><div class="tipo-sel" style="margin:0">' + TIPOS.map(function (t) {
       return '<button type="button" data-tipo="' + t[0] + '" class="' + (q.type === t[0] ? 'on' : '') + '">' + t[1] + '</button>';
@@ -122,7 +126,7 @@
       h += '<div style="flex:1"><label style="margin-top:0"><input type="checkbox" data-multiple ' + (p.multiple ? 'checked' : '') + ' style="width:auto"> varias correctas</label></div></div>';
       h += '<label>Opciones (marcá la/s correcta/s)</label><div data-choices>';
       (p.choices || []).forEach(function (c, i) {
-        h += '<div class="fila" style="margin-bottom:6px"><input type="' + (p.multiple ? 'checkbox' : 'radio') + '" name="corr_' + (q.id || 'new') + '" data-corr value="' + i + '" ' +
+        h += '<div class="fila" style="margin-bottom:6px"><input type="' + (p.multiple ? 'checkbox' : 'radio') + '" name="' + radioname + '" data-corr value="' + i + '" ' +
           ((p.correct || []).indexOf(i) >= 0 ? 'checked' : '') + ' style="width:auto">' +
           '<input type="text" data-choice value="' + esc(c) + '" placeholder="Opción ' + (i + 1) + '">' +
           '<button type="button" class="iconbtn" data-delchoice>' + ZI('x') + '</button></div>';

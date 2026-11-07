@@ -150,3 +150,26 @@ create policy views_student on public.module_views
   for all to authenticated using (student_id = auth.uid()) with check (student_id = auth.uid());
 create policy views_teacher on public.module_views
   for select to authenticated using (teaches(module_course(module_id)));
+alter table public.forum_posts   enable row level security;
+alter table public.question_bank enable row level security;
+alter table public.attendance    enable row level security;
+
+-- forum_posts --------------------------------------------------------------
+create policy forum_select on public.forum_posts
+  for select to authenticated using (enrolled(module_course(module_id)));
+create policy forum_insert on public.forum_posts
+  for insert to authenticated with check (author_id = auth.uid() and enrolled(module_course(module_id)));
+create policy forum_delete on public.forum_posts
+  for delete to authenticated using (author_id = auth.uid() or teaches(module_course(module_id)));
+
+-- question_bank --------------------------------------------------------------
+create policy bank_select on public.question_bank
+  for select to authenticated using (teaches(course_id));
+create policy bank_write on public.question_bank
+  for all to authenticated using (teaches(course_id)) with check (teaches(course_id));
+
+-- attendance --------------------------------------------------------------
+create policy attendance_student on public.attendance
+  for select to authenticated using (student_id = auth.uid() and enrolled(course_id));
+create policy attendance_teacher on public.attendance
+  for all to authenticated using (teaches(course_id)) with check (teaches(course_id));

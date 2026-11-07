@@ -1,4 +1,4 @@
-var CACHE = 'zeiro-v1';
+var CACHE = 'zeiro-v2';
 var SHELL = [
   './', './index.html', './theme.css', './manifest.webmanifest',
   './app/config.js', './app/icons.js', './app/demo.js', './app/api.js',
