@@ -607,7 +607,7 @@ main>div,main>.topbar,main>.card{animation:aparecer .3s ease}
 .ah-doc small{font-size:11.5px;opacity:.85}
 
 /* ===== v3: mensajería, encuestas, XP, flashcards, stats, certificados ===== */
-.hilo{display:flex;align-items:center;gap:12px;padding:11px 6px;border-bottom:1px solid var(--neg-150);text-decoration:none;color:inherit}
+.hilo.fx{display:flex;align-items:center;gap:12px;padding:11px 10px;text-decoration:none;color:inherit}
 .hilo:hover{background:var(--vio-50)}
 .h-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .h-txt small{color:var(--neg-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

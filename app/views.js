@@ -1789,7 +1789,7 @@
       }
       if (certs && certs.length) {
         h += '<div class="card" style="max-width:none"><h3 style="margin:0 0 10px;font-size:15px">Certificados</h3>' + certs.map(function (ct) {
-          return '<a class="hilo" href="#/cert/' + ct.code + '"><span class="nico" style="color:var(--vio-500)">' + ZI('award') + '</span>' +
+          return '<a class="hilo fx" href="#/cert/' + ct.code + '"><span class="nico" style="color:var(--vio-500)">' + ZI('award') + '</span>' +
             '<span class="h-txt"><b>' + esc(ct.course_name) + '</b><small>' + Z.fmtFecha(ct.issued_at) + '</small></span>' +
             '<span class="pill vio">' + ct.code + '</span></a>';
         }).join('') + '</div>';
@@ -1804,7 +1804,7 @@
       if (tabla && tabla.length) {
         h += '<div class="card" style="max-width:none;margin-top:26px"><h3 style="margin:0 0 10px;font-size:15px">Tabla de posiciones</h3>' +
           tabla.slice(0, 10).map(function (t, ix) {
-            return '<div class="hilo"><span class="pos-n">' + (ix + 1) + '°</span>' +
+            return '<div class="hilo fx"><span class="pos-n">' + (ix + 1) + '°</span>' +
               '<span class="h-txt"><b>' + esc(t.name) + '</b></span><span class="pill ' + (ix === 0 ? 'vio' : 'gris') + '">' + t.pts + ' XP</span></div>';
           }).join('') + '</div>';
       }

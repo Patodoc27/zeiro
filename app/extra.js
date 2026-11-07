@@ -22,7 +22,7 @@
       var h = topbar('Mensajes', 'Conversación directa con docentes y estudiantes',
         '<button class="btn sm" id="ms_new">' + ZI('plus') + ' Nuevo mensaje</button>');
       h += '<div class="card">' + (hilos.length ? hilos.map(function (t) {
-        return '<a class="hilo" href="#/chat/' + t.uid + '"><span class="avatar sm">' +
+        return '<a class="hilo fx" href="#/chat/' + t.uid + '"><span class="avatar sm">' +
           esc(t.name.split(/[\s,]+/).filter(Boolean).map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase()) +
           '</span><span class="h-txt"><b>' + esc(t.name) + ' <small class="pill gris">' + esc(t.role) + '</small></b>' +
           '<small>' + (t.mio ? 'Vos: ' : '') + esc(t.last_body.slice(0, 60)) + '</small></span>' +
@@ -87,7 +87,7 @@
       var h = topbar('Pendientes', 'Tus entregas y cuestionarios por fecha');
       h += '<div class="card" style="max-width:none">' + (pend.length ? pend.map(function (p) {
         var dest = p.mod.type === 'quiz' ? '#/quiz/' + p.mod.id : '#/entrega/' + p.mod.id;
-        return '<a class="hilo" href="' + dest + '" style="' + (p.vencida ? 'opacity:.6' : '') + '">' +
+        return '<a class="hilo fx" href="' + dest + '" style="' + (p.vencida ? 'opacity:.6' : '') + '">' +
           '<span class="nico" style="color:var(--vio-500)">' + ZI(p.mod.type === 'quiz' ? 'quiz' : 'task') + '</span>' +
           '<span class="h-txt"><b>' + esc(p.mod.title) + '</b><small>' + esc(p.course ? p.course.short_name || p.course.name : '') + '</small></span>' +
           '<span class="h-der"><span class="pill ' + (p.vencida ? 'mal' : 'azu') + '">' + ZI('clock') + ' ' + Z.fmtFecha(p.mod.due_date) + '</span></span></a>';
@@ -95,7 +95,7 @@
       if (hechos.length) {
         h += '<div class="card" style="max-width:none"><h3 style="margin:0 0 8px;font-size:15px;color:var(--neg-500)">Ya entregaste</h3>' +
           hechos.map(function (p) {
-            return '<div class="hilo" style="opacity:.7"><span class="nico" style="color:var(--tur-500)">' + ZI('check') + '</span>' +
+            return '<div class="hilo fx" style="opacity:.7"><span class="nico" style="color:var(--tur-500)">' + ZI('check') + '</span>' +
               '<span class="h-txt"><b>' + esc(p.mod.title) + '</b><small>' + esc(p.course ? p.course.short_name || p.course.name : '') + '</small></span>' +
               '<span class="pill gris">entregado</span></div>';
           }).join('') + '</div>';
