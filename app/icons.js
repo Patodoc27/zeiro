@@ -51,40 +51,41 @@
   window.ZI = function (name, cls) {
     return '<span class="ic' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><svg viewBox="0 0 24 24">' + (P[name] || P.page) + '</svg></span>';
   };
-  window.Z_LOGO = '<svg class="logo" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#0C0C14"/><path d="M14 18h36L16 46h36" fill="none" stroke="#14B8A6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 18h36" stroke="#7C3AED" stroke-width="7" stroke-linecap="round"/></svg>';
+  window.Z_LOGO = '<svg class="logo" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#14141F"/><path d="M0 47l10-6 10 6 10-6 10 6 10-6 10 6 4-1v20H0z" fill="#7C3AED"/><path d="M0 53l10-6 10 6 10-6 10 6 10-6 10 6 4-1v19H0z" fill="#2563EB"/><path d="M0 59l10-6 10 6 10-6 10 6 10-6 10 6 4-1v19H0z" fill="#14B8A6"/><path d="M12 11h40L15 39h37" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-  /* Ziro · la cebra mascota de Zeiro (SVG propio, varias poses) */
-  window.Z_ZEBRA = function (pose) {
+  /* Ziro · la vicuña mascota de Zeiro, animal emblemático del NOA (SVG propio, varias poses) */
+  window.Z_VICUNA = function (pose) {
+    var oido =
+      '<path d="M26 26c-5-7-7-16-5-21 1.4-3.5 6-3 8 0l5 14z" fill="#C98F4E" stroke="#14141F" stroke-width="3.4"/>' +
+      '<path d="M27 21c-2.6-4.8-4-10.5-3-13.8l4.5 10.5z" fill="#F4E3CE"/>' +
+      '<path d="M50 27c1.5-8 5-16 9-20 2.8-2.8 6-1 5.4 3l-5 17z" fill="#C98F4E" stroke="#14141F" stroke-width="3.4"/>' +
+      '<path d="M54 23c.8-5 3-10.5 6-14.3l-2.8 13z" fill="#F4E3CE"/>';
+    var cuello =
+      '<path d="M28 64c0 14-2 24-4 28h32c-2-4-4-14-4-28z" fill="#C98F4E" stroke="#14141F" stroke-width="3.4"/>' +
+      '<path d="M33 70c0 10-1 18-2 22h18c-1-4-2-12-2-22z" fill="#FBF1E3"/>';
     var cara =
-      '<ellipse cx="26" cy="20" rx="8" ry="12" transform="rotate(-18 26 20)" fill="#14141F"/>' +
-      '<ellipse cx="26" cy="20" rx="4" ry="7" transform="rotate(-18 26 20)" fill="#5EEAD4"/>' +
-      '<ellipse cx="54" cy="20" rx="8" ry="12" transform="rotate(18 54 20)" fill="#14141F"/>' +
-      '<ellipse cx="54" cy="20" rx="4" ry="7" transform="rotate(18 54 20)" fill="#5EEAD4"/>' +
-      '<path d="M33 4h14l3 14c-6-4-14-4-20 0z" fill="#14141F"/>' +
-      '<path d="M36 5l1.5 8M44 5l-1.5 8" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round"/>' +
-      '<path d="M40 16C24 16 14 30 14 47v8c0 16 12 27 26 27s26-11 26-27v-8c0-17-10-31-26-31z" fill="#FFFFFF" stroke="#14141F" stroke-width="3.5"/>' +
-      '<path d="M40 16c-3.5 0-7 .8-10 2.2l4 8c2-1 4-1.6 6-1.6s4 .6 6 1.6l4-8C47 16.8 43.5 16 40 16z" fill="#14141F"/>' +
-      '<path d="M20.5 30l7 5M59.5 30l-7 5" stroke="#14141F" stroke-width="4" stroke-linecap="round"/>' +
-      '<path d="M17.5 41l8 3.5M62.5 41l-8 3.5" stroke="#14141F" stroke-width="4" stroke-linecap="round"/>' +
-      '<circle cx="30" cy="52" r="4.6" fill="#14141F"/><circle cx="31.6" cy="50.4" r="1.6" fill="#fff"/>' +
-      '<circle cx="50" cy="52" r="4.6" fill="#14141F"/><circle cx="51.6" cy="50.4" r="1.6" fill="#fff"/>' +
-      '<path d="M24 44q5-3.5 10-1M46 43q5-2.5 10 1" stroke="#14141F" stroke-width="3" fill="none" stroke-linecap="round"/>' +
-      '<ellipse cx="40" cy="70" rx="15" ry="11" fill="#F4F1FD" stroke="#14141F" stroke-width="3.5"/>' +
-      '<ellipse cx="35" cy="68" rx="2.2" ry="2.8" fill="#14141F"/><ellipse cx="45" cy="68" rx="2.2" ry="2.8" fill="#14141F"/>';
-    var boca;
-    if (pose === 'fest') boca =
-      '<path d="M33 74q7 6 14 0" stroke="#14141F" stroke-width="3.2" fill="none" stroke-linecap="round"/>' +
-      '<circle cx="10" cy="30" r="2.5" fill="#7C3AED"/><circle cx="70" cy="26" r="2.5" fill="#14B8A6"/>' +
-      '<circle cx="14" cy="16" r="2" fill="#60A5FA"/><circle cx="68" cy="44" r="2" fill="#7C3AED"/>' +
-      '<path d="M12 40l6 2M66 14l5 4" stroke="#14B8A6" stroke-width="2.5" stroke-linecap="round"/>';
-    else if (pose === 'pensar') boca =
-      '<path d="M35 76h10" stroke="#14141F" stroke-width="3.2" stroke-linecap="round"/>' +
-      '<path d="M64 10l2.4 6 6 2.4-6 2.4-2.4 6-2.4-6-6-2.4 6-2.4z" fill="#7C3AED"/>';
-    else if (pose === 'saludo') boca =
-      '<path d="M33 74q7 6 14 0" stroke="#14141F" stroke-width="3.2" fill="none" stroke-linecap="round"/>' +
-      '<path d="M68 66q10 2 9-9" stroke="#14B8A6" stroke-width="5" fill="none" stroke-linecap="round"/>' +
-      '<path d="M77 50l5-8M74 46l2-9M71 43V34" stroke="#14B8A6" stroke-width="3.6" stroke-linecap="round"/>';
-    else boca = '<path d="M33 74q7 6 14 0" stroke="#14141F" stroke-width="3.2" fill="none" stroke-linecap="round"/>';
-    return '<svg viewBox="0 0 80 92" class="ziro">' + cara + boca + '</svg>';
+      '<path d="M40 14c-13 0-21 10-21 25 0 15 9 26 21 26s21-11 21-26c0-15-8-25-21-25z" fill="#FBF1E3" stroke="#14141F" stroke-width="3.4"/>' +
+      '<path d="M40 14c-13 0-21 10-21 25v1c3-11 11-17 21-17s18 6 21 17v-1c0-15-8-25-21-25z" fill="#C98F4E"/>' +
+      '<ellipse cx="30" cy="41" rx="4.2" ry="5.4" fill="#14141F"/><circle cx="31.6" cy="38.8" r="1.8" fill="#fff"/>' +
+      '<ellipse cx="50" cy="41" rx="4.2" ry="5.4" fill="#14141F"/><circle cx="51.6" cy="38.8" r="1.8" fill="#fff"/>' +
+      '<path d="M24 33q5-3 9-1M47 32q5-2 9 1" stroke="#14141F" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
+      '<path d="M33 57c0-4 3-7 7-7s7 3 7 7c0 4-3 6-7 6s-7-2-7-6z" fill="#F4E3CE" stroke="#14141F" stroke-width="2.6"/>' +
+      '<path d="M36 55.4q1.4-1.8 2.8 0M41.2 55.4q1.4-1.8 2.8 0" stroke="#14141F" stroke-width="1.8" fill="none" stroke-linecap="round"/>' +
+      '<path d="M40 59v2.6" stroke="#14141F" stroke-width="2" stroke-linecap="round"/>' +
+      '<circle cx="22" cy="50" r="3" fill="#F5B8C4" opacity=".55"/><circle cx="58" cy="50" r="3" fill="#F5B8C4" opacity=".55"/>';
+    var boca = '<path d="M36 62q4 3 8 0" stroke="#14141F" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
+    var extra = '';
+    if (pose === 'fest') extra =
+      '<circle cx="12" cy="34" r="2.5" fill="#7C3AED"/><circle cx="70" cy="28" r="2.5" fill="#14B8A6"/>' +
+      '<circle cx="16" cy="20" r="2" fill="#60A5FA"/><circle cx="68" cy="46" r="2" fill="#F59E0B"/>' +
+      '<path d="M12 44l6 2M66 16l5 4M10 52l4 4" stroke="#14B8A6" stroke-width="2.5" stroke-linecap="round"/>';
+    else if (pose === 'pensar') {
+      extra = '<path d="M64 12l2.4 6 6 2.4-6 2.4-2.4 6-2.4-6-6-2.4 6-2.4z" fill="#7C3AED"/>';
+      boca = '<path d="M37 62.5h6" stroke="#14141F" stroke-width="2.4" stroke-linecap="round"/>';
+    } else if (pose === 'saludo') extra =
+      '<path d="M64 62q11 0 10-11" stroke="#14B8A6" stroke-width="5" fill="none" stroke-linecap="round"/>' +
+      '<path d="M74 46l4-7M71 43l1-8M68 41V32" stroke="#14B8A6" stroke-width="3.6" stroke-linecap="round"/>';
+    return '<svg viewBox="0 0 80 92" class="ziro">' + oido + cuello + cara + boca + extra + '</svg>';
   };
+  window.Z_ZEBRA = window.Z_VICUNA;
 })();

@@ -3,9 +3,9 @@
   var Z = window.Z = window.Z || {};
   var api = function () { return Z.api; };
   var esc = function (s) { return Z.esc(s); };
-  var TICON = { page: 'page', file: 'file', link: 'link', quiz: 'quiz', assignment: 'task', announcement: 'mega', forum: 'forum', html: 'code' };
-  var TNOMBRE = { page: 'Página', file: 'Archivo', link: 'Enlace', quiz: 'Cuestionario', assignment: 'Tarea', announcement: 'Comunicado del curso', forum: 'Foro', html: 'Bloque HTML' };
-  var TIPO_ES = { page: 'página', file: 'archivo', link: 'enlace', quiz: 'cuestionario', assignment: 'tarea', announcement: 'comunicado', forum: 'foro', html: 'html', manual: 'manual' };
+  var TICON = { page: 'page', libro: 'book', file: 'file', link: 'link', quiz: 'quiz', assignment: 'task', announcement: 'mega', forum: 'forum', html: 'code' };
+  var TNOMBRE = { page: 'Página', libro: 'Libro', file: 'Archivo', link: 'Enlace', quiz: 'Cuestionario', assignment: 'Tarea', announcement: 'Comunicado del curso', forum: 'Foro', html: 'Bloque HTML' };
+  var TIPO_ES = { page: 'página', libro: 'libro', file: 'archivo', link: 'enlace', quiz: 'cuestionario', assignment: 'tarea', announcement: 'comunicado', forum: 'foro', html: 'html', manual: 'manual' };
 
   /* render seguro de HTML incrustado (iframe aislado); si es una URL, reproductor de video */
   function bloqueEmbed(code) {
@@ -136,12 +136,14 @@
       var edita = esDocenteDe(c);
       var color = c.color || '#7C3AED';
       var heroStyle = 'background:' + esc(color);
-      if (c.banner_url) heroStyle = 'background:linear-gradient(90deg,' + esc(color) + 'F2 30%,' + esc(color) + 'B3),url(' + esc(c.banner_url) + ') center/cover';
+      if (c.banner_url) heroStyle = 'background:linear-gradient(90deg,' + esc(color) + 'D9 22%,' + esc(color) + '1A),url(' + esc(c.banner_url) + ') center/cover';
       var h = volver('#/mis-cursos') +
         '<div class="aula-hero" style="' + heroStyle + '"><div class="pat pat-' + esc(c.pattern || 'liso') + '"></div>' +
         '<div class="ah-txt"><span class="sigla">' + esc(c.sigla || (c.short_name || c.name).slice(0, 4).toUpperCase()) + '</span>' +
         '<h1>' + esc(c.name) + '</h1><p>' + (c.teacher ? 'Prof. ' + esc(c.teacher.full_name) + ' · ' : '') + esc(c.description || '') + '</p>' +
         (c.welcome ? '<div class="ah-wel">' + esc(c.welcome) + '</div>' : '') + '</div>' +
+        (c.teacher ? '<div class="ah-doc"><span class="foto">' + esc((c.teacher.full_name || '?').charAt(0).toUpperCase()) + '</span>' +
+          '<div><b>' + esc(c.teacher.full_name) + '</b><small>Docente del aula</small></div></div>' : '') +
         '<div class="ah-acts">' +
           (edita
             ? '<button class="btn blanco sm" id="c_aula">' + ZI('sparkle') + ' Diseñar aula</button>' +
@@ -165,7 +167,7 @@
           var mods = c.modules.filter(function (m) { return m.section_id === s.id && (edita || (m.visible && ventanaMod(m) !== 'futuro')); })
             .sort(function (a, b) { return a.position - b.position; });
           var hstyle = (s.color ? 'border-left:5px solid ' + esc(s.color) + ';' : '') +
-            (s.img ? "background-image:linear-gradient(90deg,rgba(255,255,255,.95) 40%,rgba(255,255,255,.72)),url('" + esc(s.img) + "');background-size:cover;background-position:center;" : '');
+            (s.img ? "background-image:linear-gradient(90deg,rgba(255,255,255,.92) 30%,rgba(255,255,255,.45)),url('" + esc(s.img) + "');background-size:cover;background-position:center;" : '');
           return '<div class="seccion"' + (s.color ? ' style="border-top:3px solid ' + esc(s.color) + '"' : '') + '><header' + (hstyle ? ' style="' + hstyle + '"' : '') + '><h3>' + esc(s.title) + '</h3>' +
             '<span class="pill gris">' + mods.length + ' ítem' + (mods.length === 1 ? '' : 's') + '</span>' +
             (edita ? '<button class="iconbtn" data-editsec="' + s.id + '" title="Diseñar unidad">' + ZI('edit') + '</button>' +
@@ -249,6 +251,7 @@
         if (m.type === 'announcement') return esc((c.body || '').slice(0, 90));
         if (m.type === 'forum') return esc((c.description || c.topic || 'Espacio de debate').slice(0, 90));
         if (m.type === 'html') return 'Contenido incrustado' + (c.video_url ? ' · video' : '');
+        if (m.type === 'libro') return 'Libro · ' + Math.max((c.capitulos || []).length, 1) + ' capítulo' + ((c.capitulos || []).length === 1 ? '' : 's');
         return '';
       }
 
@@ -366,6 +369,10 @@
       '<p style="font-size:12.5px;color:var(--neg-300);margin-top:8px">Las preguntas se editan aparte desde el ítem del curso → botón de edición → "Editar preguntas".</p>';
     else if (tipo === 'announcement') cuerpo = '<label>Mensaje</label>' + Z.voz.wrap('<textarea id="mm_body">' + esc(c.body || '') + '</textarea>');
     else if (tipo === 'forum') cuerpo = '<label>Consigna del foro (qué se debate)</label>' + Z.voz.wrap('<textarea id="mm_desc" style="min-height:90px">' + esc(c.description || '') + '</textarea>');
+    else if (tipo === 'libro') cuerpo =
+      '<label>Capítulos del libro</label><div id="mm_caps"></div>' +
+      '<button type="button" class="btn sec sm" id="mm_cap_add" style="margin-top:4px">' + ZI('plus') + ' Agregar capítulo</button>' +
+      '<p style="font-size:12px;color:var(--neg-300);margin-top:6px">Cada capítulo admite la barra de formato: títulos, imágenes, tablas, citas. El estudiante lo lee con índice lateral, como un libro.</p>';
     else if (tipo === 'html') cuerpo =
       '<label>Código HTML a incrustar (iframes, widgets, simuladores…)</label>' +
       '<textarea id="mm_html" style="min-height:120px;font-family:monospace;font-size:12.5px">' + esc(c.html || '') + '</textarea>' +
@@ -388,6 +395,26 @@
     v.querySelector('[data-x]').onclick = function () { v.remove(); };
     var bp = v.querySelector('[data-preg]');
     if (bp) bp.onclick = function () { v.remove(); location.hash = '#/editor-quiz/' + m.id; };
+    if (tipo === 'libro') {
+      var capsBox = v.querySelector('#mm_caps');
+      var filaCap = function (cap) {
+        var d = document.createElement('div');
+        d.className = 'caprow';
+        d.innerHTML = '<div class="fila" style="gap:6px;margin-bottom:6px"><input class="cap-t" style="flex:1" placeholder="Título del capítulo" value="' + esc(cap.t || '') + '">' +
+          '<div class="cap-tools"><button type="button" class="iconbtn cap-up" title="Subir">' + ZI('up') + '</button>' +
+          '<button type="button" class="iconbtn cap-down" title="Bajar">' + ZI('down') + '</button>' +
+          '<button type="button" class="iconbtn cap-del" title="Quitar">' + ZI('trash') + '</button></div></div>' +
+          Z.voz.wrap('<textarea class="cap-b" style="min-height:110px" placeholder="Contenido del capítulo…">' + esc(cap.b || '') + '</textarea>');
+        d.querySelector('.cap-del').onclick = function () { d.remove(); };
+        d.querySelector('.cap-up').onclick = function () { if (d.previousElementSibling) capsBox.insertBefore(d, d.previousElementSibling); };
+        d.querySelector('.cap-down').onclick = function () { if (d.nextElementSibling) capsBox.insertBefore(d.nextElementSibling, d); };
+        return d;
+      };
+      (c.capitulos && c.capitulos.length ? c.capitulos : [{ t: '', b: '' }]).forEach(function (cap) {
+        capsBox.appendChild(filaCap(cap));
+      });
+      v.querySelector('#mm_cap_add').onclick = function () { capsBox.appendChild(filaCap({ t: '', b: '' })); };
+    }
     var mh = v.querySelector('#mm_html');
     if (mh) {
       var prev = function () { v.querySelector('#mm_prev').innerHTML = bloqueEmbed(mh.value); };
@@ -414,6 +441,15 @@
           pass_grade: Number(v.querySelector('#mm_pass').value) || 6, shuffle: v.querySelector('#mm_shuf').checked };
       } else if (tipo === 'forum') {
         content = { description: v.querySelector('#mm_desc').value };
+      } else if (tipo === 'libro') {
+        var caps = [];
+        v.querySelectorAll('#mm_caps .caprow').forEach(function (d, ix) {
+          var t = d.querySelector('.cap-t').value.trim();
+          var b = d.querySelector('.cap-b').value;
+          if (t || b.trim()) caps.push({ t: t || ('Capítulo ' + (ix + 1)), b: b });
+        });
+        if (!caps.length) return Z.toast('El libro necesita al menos un capítulo', 'mal');
+        content = { capitulos: caps };
       } else if (tipo === 'html') {
         content = { html: v.querySelector('#mm_html').value, video_url: v.querySelector('#mm_vurl').value.trim() || c.video_url || null };
       }
@@ -459,7 +495,7 @@
         var m = found, c = fcourse;
         var h = volver('#/curso/' + c.id, esc(c.short_name || c.name)) + topbar(m.title, esc(c.name));
         if (m.type === 'forum') { location.hash = '#/foro/' + m.id; return; }
-        if (m.type === 'page') h += '<div class="card" style="max-width:860px"><div class="vozrow">' + Z.voz.readBtn('#mod_txt') + '<span>Escuchar</span></div><div id="mod_txt">' + Z.md(m.content.body || '') + '</div></div>';
+        if (m.type === 'page') h += '<div class="card" style="max-width:1180px"><div class="vozrow">' + Z.voz.readBtn('#mod_txt') + '<span>Escuchar</span></div><div id="mod_txt">' + Z.md(m.content.body || '') + '</div></div>';
         else if (m.type === 'link') h += '<div class="card"><p>' + ZI('link') + ' <a href="' + esc(m.content.url) + '" target="_blank" rel="noopener">' + esc(m.content.url) + '</a></p>' +
           '<a class="btn" href="' + esc(m.content.url) + '" target="_blank" rel="noopener" style="margin-top:8px">Abrir enlace</a></div>';
         else if (m.type === 'file') h += '<div class="card"><div class="fila">' + ZI('file') + '<b>' + esc(m.content.file_name || 'Archivo') + '</b>' +
@@ -467,7 +503,38 @@
         else if (m.type === 'announcement') h += '<div class="card"><div class="vozrow">' + Z.voz.readBtn('#mod_txt') + '<span>Escuchar</span></div><div id="mod_txt">' + Z.md(m.content.body || '') + '</div><small style="color:var(--neg-300)">' + Z.fmtFecha(m.created_at, true) + '</small></div>';
         else if (m.type === 'html') h += '<div class="card">' + bloqueEmbed(m.content.video_url || '') + bloqueEmbed(m.content.html || '') +
           ((!m.content.video_url && !m.content.html) ? '<p style="color:var(--neg-300)">Bloque vacío.</p>' : '') + '</div>';
+        else if (m.type === 'libro') {
+          var caps = (m.content.capitulos && m.content.capitulos.length) ? m.content.capitulos : [{ t: 'Capítulo 1', b: '' }];
+          h += '<div class="libro"><nav class="libro-nav"><h4>Índice</h4>' +
+            caps.map(function (cap, ix) {
+              return '<button class="lcap' + (ix === 0 ? ' on' : '') + '" data-cap="' + ix + '"><span class="n">' + (ix + 1) + '</span>' + esc(cap.t) + '</button>';
+            }).join('') + '</nav>' +
+            '<div class="card" style="min-width:0"><div class="vozrow">' + Z.voz.readBtn('#libro_txt') + '<span>Escuchar</span></div>' +
+            '<h2 class="md-h" id="libro_tit"></h2><div id="libro_txt"></div>' +
+            '<div class="libro-pie"><button class="btn sec sm" id="libro_prev">' + ZI('back') + ' Anterior</button>' +
+            '<span class="pill gris" id="libro_pos"></span>' +
+            '<button class="btn sm" id="libro_next">Siguiente ' + ZI('chev') + '</button></div></div></div>';
+        }
         var main = Z.shell(h, '#/mis-cursos');
+        if (m.type === 'libro') {
+          var caps2 = (m.content.capitulos && m.content.capitulos.length) ? m.content.capitulos : [{ t: 'Capítulo 1', b: '' }];
+          var ixCap = 0;
+          var pintar = function () {
+            main.querySelector('#libro_tit').textContent = caps2[ixCap].t;
+            main.querySelector('#libro_txt').innerHTML = Z.md(caps2[ixCap].b || '');
+            main.querySelector('#libro_pos').textContent = (ixCap + 1) + ' de ' + caps2.length;
+            main.querySelectorAll('.lcap').forEach(function (b, i) { b.classList.toggle('on', i === ixCap); });
+            var bp2 = main.querySelector('#libro_prev'), bn2 = main.querySelector('#libro_next');
+            bp2.disabled = ixCap === 0; bn2.disabled = ixCap === caps2.length - 1;
+            bp2.style.opacity = bp2.disabled ? '.45' : '1'; bn2.style.opacity = bn2.disabled ? '.45' : '1';
+          };
+          main.querySelectorAll('.lcap').forEach(function (b) {
+            b.onclick = function () { ixCap = Number(b.getAttribute('data-cap')); pintar(); };
+          });
+          main.querySelector('#libro_prev').onclick = function () { if (ixCap > 0) { ixCap--; pintar(); } };
+          main.querySelector('#libro_next').onclick = function () { if (ixCap < caps2.length - 1) { ixCap++; pintar(); } };
+          pintar();
+        }
         if (api().me().role === 'estudiante') api().markViewed(mid);
       }
       next();
@@ -494,7 +561,7 @@
           var puede = hechos.length < (cfg.attempts_allowed || 1);
           var mejor = hechos.reduce(function (b, a) { return Math.max(b, a.score || 0); }, -1);
           var h = volver('#/curso/' + cc.id, esc(cc.short_name || cc.name)) + topbar(cm.title, 'Cuestionario · ' + esc(cc.name));
-          h += '<div class="card" style="max-width:760px">';
+          h += '<div class="card" style="max-width:1180px">';
           if (cfg.intro) h += '<p>' + esc(cfg.intro) + '</p>';
           h += '<div class="fila wrap" style="margin:12px 0">' +
             '<span class="pill azu">' + qs.length + ' preguntas</span>' +
@@ -638,9 +705,9 @@
     function verCorreccion(c, m, a) {
       api().questions(m.id, false).then(function (qs) {
         var h = volver('#/quiz/' + m.id, 'Cuestionario') + topbar(m.title, 'Tu corrección · ' + Z.fmtFecha(a.finished_at, true)) +
-          '<div class="card" style="max-width:860px"><div class="entre"><h2 style="font-size:17px">Puntaje: ' + a.score + ' / ' + a.max_score + '</h2>' +
+          '<div class="card" style="max-width:1180px"><div class="entre"><h2 style="font-size:17px">Puntaje: ' + a.score + ' / ' + a.max_score + '</h2>' +
           (a.needs_review ? '<span class="pill azu">Preguntas abiertas en revisión</span>' : '<span class="pill tur">Corregido</span>') + '</div></div>' +
-          '<div style="max-width:860px;margin-top:14px">' +
+          '<div style="max-width:1180px;margin-top:14px">' +
           qs.map(function (q) { return Z.quiz.renderReview(q, a.answers ? a.answers[q.id] : null, a.essay_scores ? a.essay_scores[q.id] : null); }).join('') + '</div>';
         Z.shell(h, '#/mis-cursos');
       });
@@ -880,7 +947,7 @@
           var cfg = cm.content || {};
           var vencida = cm.due_date && new Date(cm.due_date) < new Date();
           var h = volver('#/curso/' + cc.id, esc(cc.short_name || cc.name)) + topbar(cm.title, 'Tarea · ' + esc(cc.name));
-          h += '<div class="card" style="max-width:760px"><div class="vozrow">' + Z.voz.readBtn('#en_cons') + '<span>Escuchar consigna</span></div><div id="en_cons">' + Z.md(cfg.instructions || '') + '</div>' +
+          h += '<div class="card" style="max-width:1180px"><div class="vozrow">' + Z.voz.readBtn('#en_cons') + '<span>Escuchar consigna</span></div><div id="en_cons">' + Z.md(cfg.instructions || '') + '</div>' +
             '<div class="fila wrap" style="margin:10px 0">' +
             (cm.due_date ? '<span class="pill ' + (vencida ? 'mal' : 'azu') + '">' + ZI('clock') + ' ' + Z.fmtFecha(cm.due_date, true) + '</span>' : '') +
             '<span class="pill vio">Nota máx. ' + (cfg.max_grade || 10) + '</span>' +
@@ -1364,7 +1431,7 @@
       var pv = v.querySelector('#ap_prev');
       var col = v.querySelector('#ap_color').value;
       pv.style.background = banner
-        ? 'linear-gradient(90deg,' + col + 'F2 30%,' + col + 'B3),url(' + banner + ') center/cover'
+        ? 'linear-gradient(90deg,' + col + 'D9 22%,' + col + '1A),url(' + banner + ') center/cover'
         : col;
       v.querySelector('#ap_pat').className = 'pat pat-' + sel;
       v.querySelector('#ap_sig').textContent = (v.querySelector('#ap_sigla').value || 'ZEI').toUpperCase();
@@ -1613,11 +1680,11 @@
           var h = volver('#/correccion-quiz/' + mid, 'Intentos') +
             topbar('Vista previa · ' + cm.title, 'Así lo ve el estudiante · ' + esc(cc.name),
               '<button class="btn sec" id="pv_sol">' + ZI('check') + ' Ver respuestas</button>');
-          h += '<div class="card" style="max-width:860px">' + (cfg.intro ? Z.md(cfg.intro) : '') +
+          h += '<div class="card" style="max-width:1180px">' + (cfg.intro ? Z.md(cfg.intro) : '') +
             '<div class="fila wrap" style="margin-top:8px"><span class="pill azu">' + qs.length + ' preguntas</span>' +
             (cfg.time_limit_min ? '<span class="pill azu">' + ZI('clock') + ' ' + cfg.time_limit_min + ' min</span>' : '') +
             '<span class="pill vio">' + (cfg.attempts_allowed || 1) + ' intento' + ((cfg.attempts_allowed || 1) > 1 ? 's' : '') + '</span></div></div>' +
-            '<div id="pv_list" style="max-width:860px;margin-top:14px"></div>';
+            '<div id="pv_list" style="max-width:1180px;margin-top:14px"></div>';
           var main = Z.shell(h, '#/mis-cursos');
           var verSol = false;
           function dibujar() {

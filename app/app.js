@@ -80,6 +80,20 @@
         out.push('<blockquote>' + bq.join('<br>') + '</blockquote>');
         continue;
       }
+      if (/^\s*\|.*\|\s*$/.test(l)) {
+        flush();
+        var filas = [];
+        while (i < lineas.length && /^\s*\|.*\|\s*$/.test(lineas[i])) { filas.push(lineas[i]); i++; }
+        var tab = '<table class="md-tab"><tbody>';
+        filas.forEach(function (f, ix) {
+          var celdas = f.replace(/^\s*\||\|\s*$/g, '').split('|');
+          if (/^[\s\-:]+$/.test(celdas.join(''))) return;
+          var tag = ix === 0 ? 'th' : 'td';
+          tab += '<tr>' + celdas.map(function (c) { return '<' + tag + '>' + c.trim() + '</' + tag + '>'; }).join('') + '</tr>';
+        });
+        out.push(tab + '</tbody></table>');
+        continue;
+      }
       par.push(l); i++;
     }
     flush();
